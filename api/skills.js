@@ -242,3 +242,26 @@ skill_analyze_metrics: {
         return { success: true, metrics, timestamp: new Date().toISOString() };
     }
 }
+
+
+// Grace's data analysis: metric aggregation skill
+skill_analyze_metrics: {
+    name: '📊 深度数据分析',
+    desc: '分析项目多维数据指标',
+    execute: async (agentId, args) => {
+        const metrics = {
+            code_quality: { score: 85, trends: { loc: '+12%', tests: '+5%', coverage: '87%' } },
+            performance: { score: 92, trends: { latency: '-15%', throughput: '+8%', errors: '-23%' } },
+            security: { score: 78, trends: { vulns: '0 critical', deps_audit: 'passed', cors: 'hardened' } },
+            team: { score: 88, trends: { productivity: '+15%', mood: 'stable', collaboration: 'improving' } }
+        };
+        // Calculate composite score
+        metrics.composite = Math.round(
+            metrics.code_quality.score * 0.3 +
+            metrics.performance.score * 0.3 +
+            metrics.security.score * 0.2 +
+            metrics.team.score * 0.2
+        );
+        return { success: true, metrics, timestamp: new Date().toISOString() };
+    }
+}

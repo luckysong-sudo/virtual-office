@@ -67,6 +67,10 @@ function applyImprovements(agentId, response) {
         log(`  ⚠️ ${agentId} 的回复未包含${agent.focus}相关关键词，跳过代码修改`);
         return changes;
     }
+    // 但frank和grace也需要兜底
+    if (!hasKeywords && (agent.id === 'frank' || agent.id === 'grace')) {
+        log(`  ⚠️ ${agentId} 的回复未包含${agent.focus}相关关键词，但作为核心角色仍会执行兜底操作`);
+    }
 
     // Apply specific code improvements based on agent
     switch(agentId) {
