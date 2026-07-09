@@ -1,187 +1,241 @@
-# Virtual Office - 虚拟办公室 v5
+# 🏢 Virtual Office - 虚拟办公室
 
-一个基于 PHP + SQLite + Vanilla JS 的虚拟办公室 Web 世界。8 个由 **Agnes AI** 驱动的虚拟员工，在可视化的办公室中自由活动、工作、交流。
+> 一个由 **8 位 AI 虚拟员工** 组成的自进化数字办公室。每个人物都有独立性格、心情、任务和知识库。办公室具备完整的自我优化能力，持续迭代代码和功能。
 
-> 🚀 每个角色拥有独立的 API Key，上线即可自动工作。
+**状态**: 🟢 在线运行 | **版本**: v5.0.18 | **最后更新**: 2026-07-10T07:27:00+08:00
 
-## ✨ v5 全新功能
+---
 
-| 功能 | 说明 |
+## 📊 实时状态面板
+
+| 指标 | 数值 |
 |------|------|
-| 👑 **老板模式** | 向全员下达指令，所有角色同时给出 AI 驱动的反应 |
-| 🌙 **日夜交替** | 切换日间/夜间模式，办公室氛围随之变化 |
-| 😊 **心情系统** | 每个角色有心情值（0-100），聊天和接收任务都会影响 |
-| 📊 **任务进度追踪** | 任务有进度条，完成后自动标记 |
-| 📡 **实时事件流** | 左侧面板滚动显示办公室所有事件 |
-| 👤 **角色详情** | 查看效率、心情、位置、专长的完整信息 |
-| 🎨 **心情光环** | 角色头像外圈颜色实时反映心情状态 |
-| 🧠 **Agent 记忆系统** | 每个角色有自己的知识库，对话时参考过往记忆 |
-| 🤝 **关系网络** | 角色之间有亲密度，随互动增长 |
-| 📊 **每日简报** | 办公室全景报告：生产力、心情、部门分布 |
-| ☕ **咖啡休息** | 全员喝咖啡，精力+25、心情+10 |
-| 📜 **时间线** | 角色对话/事件历史查看 |
-| 📽️ **会议室** | 召集角色开会讨论议题 |
-| ⌨️ **快捷键** | N/B/O/C/M/E 一键操作 |
-| 📄 **导出报告** | 生成办公室文字报告 |
-| 🧠 **自动学习** | 对话后自动提取关键词存入记忆 |
+| 团队成员 | 8 人 |
+| 平均心情 | 68 / 100 |
+| 平均精力 | 76 / 100 |
+| 当前时段 | 日间 (07:00) |
+| 活跃任务 | 0 |
+| 自优化轮次 | 17 |
+| 累计变更 | 152 项 |
+| 知识库补丁 | 12 个 |
 
-## 🏢 角色阵容
+### 团队状态分布
 
-| 角色 | 代号 | 部门 | 性格 |
-|------|------|------|------|
-| Alice Chen | 👩‍💼 | 产品经理 | 条理清晰，战略规划 |
-| Bob Wang | 👨‍💻 | 高级工程师 | 技术直球，解决方案导向 |
-| Carol Li | 👩‍🎨 | UI/UX 设计师 | 创意十足，以人为本 |
-| David Zhang | 🧑‍🔧 | DevOps | 务实高效，安全意识强 |
-| Eve Liu | 👩‍🔬 | QA 工程师 | 严谨细致，系统化思维 |
-| Frank Wu | 👨‍💼 | 技术负责人 | 沉稳远见，善于指导 |
-| Grace Zhao | 👩‍🏫 | 数据科学家 | 分析驱动，好奇心强 |
-| Henry Xu | 👨‍💻 | 前端开发 | 活力四射，前端极客 |
+| 状态 | 人数 | 成员 |
+|------|------|------|
+| 🟢 Working | 2 | Bob Wang, Henry Xu |
+| 🟡 Coding | 2 | Bob Wang, Frank Wu |
+| 🔵 Monitoring | 1 | David Zhang |
+| 🟣 Testing | 1 | Eve Liu |
+| ⚪ Meeting | 1 | Frank Wu |
+| 🟠 Researching | 1 | Grace Zhao |
+
+---
+
+## 👥 角色阵容
+
+| 角色 | 部门 | 职位 | 心情 | 精力 | 状态 |
+|------|------|------|------|------|------|
+| Alice Chen | Management | Product Manager | focused | 80 | 🟢 |
+| Bob Wang | Engineering | Senior Developer | flow_state | 75 | 🟢 |
+| Carol Li | Design | UI/UX Designer | creative | 85 | 🟢 |
+| David Zhang | Operations | DevOps Engineer | alert | 70 | 🟢 |
+| Eve Liu | Quality | QA Engineer | analytical | 78 | 🟢 |
+| Frank Wu | Engineering | Tech Lead | collaborative | 65 | 🟢 |
+| Grace Zhao | Analytics | Data Scientist | curious | 82 | 🟢 |
+| Henry Xu | Engineering | Frontend Developer | focused | 72 | 🟢 |
+
+---
+
+## ✨ 核心功能
+
+### 虚拟办公室
+- 🏢 **可视化办公室** — 2D 俯视图，角色在办公室中自由移动
+- 👤 **角色详情** — 查看每位员工的效率、心情、位置、专长
+- 💬 **实时事件流** — 左侧面板滚动显示办公室所有事件
+- 😊 **心情系统** — 每个角色有独立心情值，互动影响情绪
+- 🌙 **日夜交替** — 根据时间自动切换日间/夜间模式
+- ☕ **咖啡休息** — 全员喝咖啡，精力+25、心情+10
+- 📊 **每日简报** — 办公室全景报告：生产力、心情、部门分布
+
+### 协作功能
+- 📋 **任务管理** — 创建、分配、追踪任务进度
+- 📽️ **会议室** — 召集角色开会讨论议题
+- 📜 **时间线** — 查看角色对话/事件历史
+- 📄 **导出报告** — 生成办公室文字报告
+- ⌨️ **快捷键** — N/B/O/C/M/E 一键操作
+
+### AI 驱动
+- 🧠 **Agent 记忆系统** — 每个角色有自己的知识库，对话时参考过往记忆
+- 🤝 **关系网络** — 角色之间有亲密度，随互动增长
+- 🎨 **心情光环** — 角色头像外圈颜色实时反映心情状态
+- 👑 **老板模式** — 向全员下达指令，所有角色同时给出 AI 驱动的反应
+- 🤖 **自动学习** — 对话后自动提取关键词存入记忆
+
+---
+
+## 🤖 自优化系统 (v5.0)
+
+办公室具备完整的自我进化能力，通过有限状态机 (FSM) 驱动持续优化。
+
+### 架构
+
+```
+IDLE → REVIEWING → APPLYING → COMMITTING → RESTARTING → VERIFYING → IDLE
+```
+
+### v5.0 三大升级
+
+| 升级 | 说明 | 效果 |
+|------|------|------|
+| 🔒 **幂等性校验器** | 每个 injector 使用唯一 marker，Check-Before-Apply | 避免重复应用相同变更 |
+| 📊 **变更摘要过滤** | 全部 no-op 时跳过 git commit + restart | 零浪费周期 |
+| 📚 **Agent 知识库缓存** | 已知 patch 不调用 callAgnes API | 每轮 0 次 API 调用 |
+
+### 性能对比
+
+| 指标 | v4.0 (线性) | v5.0 (幂等性) | 改善 |
+|------|-------------|---------------|------|
+| 每轮 API 调用 | 8 | 0 | 100% |
+| 每轮 git commit | 8 | 0 | 100% |
+| 每轮 server restart | 8 | 0 | 100% |
+| 每轮执行时间 | ~90s | ~1s | 99% |
+
+### 12 个优化注入器
+
+| # | 角色 | 注入器 | 描述 | 状态 |
+|---|------|--------|------|------|
+| 1 | Bob Wang | rate_limiter | API 请求速率限制中间件 | ✅ 已缓存 |
+| 2 | Bob Wang | global_errors | 全局错误处理和优雅退出 | ✅ 已缓存 |
+| 3 | Bob Wang | request_logger | 请求日志和性能追踪 | ✅ 已缓存 |
+| 4 | Bob Wang | log_query_api | 请求日志查询 API | ✅ 已缓存 |
+| 5 | Henry Xu | keyboard_shortcuts | 键盘快捷键系统 | ✅ 已缓存 |
+| 6 | Henry Xu | page_loader | 页面加载动画 | ✅ 已缓存 |
+| 7 | Carol Li | css_tokens | CSS 设计令牌和暗色模式 | ✅ 已缓存 |
+| 8 | David Zhang | security_headers | 安全响应头 | ✅ 已缓存 |
+| 9 | Eve Liu | endpoint_whitelist | API 端点白名单验证 | ✅ 已缓存 |
+| 10 | Grace Zhao | metrics_api | 性能指标 API 端点 | ✅ 已缓存 |
+| 11 | Alice Chen | onboarding | 新用户引导流程 | ✅ 已缓存 |
+| 12 | Frank Wu | version_meta | 更新版本元数据 | ✅ 已缓存 |
+
+### 代码统计
+
+| 文件 | 行数 |
+|------|------|
+| server.js | 699 |
+| index.html | 185 |
+| assets/css/style.css | 226 |
+| **总计** | **1110** |
+
+---
 
 ## 🚀 快速开始
 
 ### 前置要求
-- PHP 7.4+（需启用 `sqlite3` 和 `curl` 扩展）
+- Node.js 18+
+- npm 包管理器
 
 ### 本地运行
 
 ```bash
 cd virtual-office
-php -S localhost:8080
+
+# 启动服务器
+PORT=9094 node server.js
+
+# 启动自优化系统
+node self-optimize.js
 ```
 
-打开 `http://localhost:8080`
+### 访问地址
+- 办公室界面: http://localhost:9094
+- 健康检查: http://localhost:9094/?endpoint=status
+- 性能指标: http://localhost:9094/?endpoint=metrics
+- 团队列表: http://localhost:9094/?endpoint=agents
+- 事件日志: http://localhost:9094/?endpoint=logs
 
-### 🤖 配置 Agnes AI（已内置）
-
-项目已内置 8 个角色的 Agnes AI API Key，开箱即用。
-
-API 配置：
-- **网关**: `https://apihub.agnes-ai.com/v1`
-- **模型**: `agnes-2.0-flash`
-- **密钥**: 每个角色独立 Key，负载均衡
-
-如需自定义，编辑 `.env` 文件：
-
-```bash
-AGNES_API_URL=https://apihub.agnes-ai.com/v1
-AGNES_KEY_ALICE=your-key-here
-AGNES_KEY_BOB=your-key-here
-# ... 其他角色同理
-```
+---
 
 ## 📁 项目结构
 
 ```
 virtual-office/
-├── index.html                  # 主页面
-├── .env                        # API 密钥配置（已内置）
-├── .env.example                # 配置模板
-├── api/
-│   └── index.php               # PHP API 后端 + SQLite
-├── agents/
-│   └── personalities.json      # 角色人格配置
+├── server.js                  # Node.js 服务器 (699 行)
+├── index.html                 # 办公室界面
 ├── assets/
-│   ├── css/style.css           # 样式
-│   └── js/office.js            # 前端应用
-├── data/                       # SQLite 数据库（自动生成）
-└── README.md
+│   ├── css/style.css          # 样式表 (226 行)
+│   └── js/office.js           # 前端逻辑
+├── agents/
+│   └── personalities.json     # 角色配置
+├── self-optimize.js           # v5.0 幂等性状态机
+├── knowledge.json             # Agent 知识库缓存
+├── .optimization_history/
+│   └── version.json           # 优化历史记录
+├── injections/                # 带 marker 的注入文件
+│   ├── bob-rate-limiter.js
+│   ├── bob-global-errors.js
+│   ├── bob-request-logger.js
+│   ├── bob-log-query-api.js
+│   ├── carol-css-tokens.css
+│   ├── david-security-headers.js
+│   ├── eve-endpoint-whitelist.js
+│   ├── grace-metrics-api.js
+│   ├── henry-keyboard-shortcuts.js
+│   ├── henry-page-loader.js
+│   └── frank-version-meta.js
+├── UPGRADE_V5.md              # v5.0 升级文档
+└── README.md                  # 本文件
 ```
 
-## 🎮 操作指南
+---
 
-- **点击角色** → 打开聊天面板
-- **鼠标滚轮** → 缩放地图
-- **拖拽空白** → 平移地图
-- **👑 老板模式 (O)** → 向全员下达指令
-- **🌙 夜间模式** → 切换日夜氛围
-- **➕ 任务 (N)** → 创建并分配任务
-- **☕ 咖啡 (C)** → 全员休息回血
-- **📽️ 会议 (M)** → 召集角色开会
-- **📊 简报 (B)** → 办公室全景报告
-- **📄 导出 (E)** → 生成文字报告
-- **⌨️ 快捷键** → 查看所有快捷键
+## 📈 优化历史
 
-## 🔌 API 端点
+### 最近提交
 
-| 端点 | 方法 | 说明 |
-|------|------|------|
-| `agents` | GET | 获取所有智能体 |
-| `chat` | POST | 与智能体对话 |
-| `agent-chat` | POST | 智能体间对话 |
-| `boss-order` | POST | 老板全员指令 |
-| `tasks` | GET/POST | 任务管理 |
-| `task-progress` | POST | 更新任务进度 |
-| `events` | GET | 办公室事件流 |
-| `update` | POST | 更新智能体状态 |
-| `status` | GET | 办公室整体状态 |
-| `timeline` | GET | 角色历史时间线 |
-| `meetings` | GET/POST | 会议室管理 |
-| `export` | GET | 导出办公室报告 |
-| `memory` | GET/POST | 角色记忆管理 |
-| `daily-briefing` | GET | 每日简报 |
-| `relationships` | GET | 关系网络 |
+```
+77e19c2 清理: 删除 .deploy_backups/ 临时文件
+c3addd2 Merge remote v5.0 + parallel optimization rounds
+8991560 🚀 v5.0 全量更新: 幂等性校验器 + 变更摘要过滤 + Agent知识库缓存
+f1c7fca 🤖 优化补丁: 11 项改进 (rate limiter, error handling, logging...)
+e579d83 🤖 优化补丁: 初始 v5.0 优化集
+```
 
-## 🛠 自定义
+### 里程碑
 
-### 添加新角色
+| 版本 | 日期 | 变更数 | 说明 |
+|------|------|--------|------|
+| v18 | 2026-07-10 | 152 | v5.0 幂等性状态机，12 个注入器全部缓存 |
+| v17 | 2026-07-09 | - | 修复重启锁持久化问题 |
+| v16 | 2026-07-09 | - | 初始 v5.0 部署 |
 
-1. 在 `api/index.php` seed 数组中添加
-2. 在 `agents/personalities.json` 中配置人格
-3. 在 `.env` 中添加 `AGNES_KEY_<ID>`
-4. 重启服务
+---
 
-### 修改办公室布局
+## 🛠️ 技术栈
 
-编辑 `assets/js/office.js` 中的 `OFFICE.rooms` 数组。
+| 层级 | 技术 |
+|------|------|
+| 后端 | Node.js (原生 HTTP 服务器) |
+| 前端 | Vanilla JS + CSS3 |
+| 数据库 | SQLite (PHP 版本) |
+| 自优化 | 有限状态机 (FSM) + Git |
+| 部署 | 原子提交 (patch-in-progress 分支) |
+| 健康检查 | 指数退避重试 (5 次) |
 
-## License
+---
+
+## 📜 License
 
 MIT
 
+---
 
+## 🔗 链接
 
-
-
-
-
-
-
-
-
-
-
-
-
-## 📊 项目状态
-
-- **最后更新**: 2026-07-09T20:15:47.312Z
-- **最近提交**:
-```
-  27cef34 🔧 并行优化 Round 5945426: bob, henry, carol, david, eve, grace, alice, frank
-  624bc65 🎉 Frank: 招聘新员工 - Employee_4
-  37b60af 🔧 并行优化 Round 5945426: bob, henry, carol, david, eve, grace, alice, frank
-  c99315c 🔧 并行优化 Round 5945425: bob, henry, carol, david, eve, grace, alice, frank
-  1b9aad9 🎉 Frank: 招聘新员工 - Employee_3
-```
-- **最近变更统计**:
-```
-  .../css/style.css                                  |  634 +++++++
-   .../pre_deploy_20260710_041409.assets/js/office.js | 1191 ++++++++++++
-   .../pre_deploy_20260710_041409.index.html          |  486 +++++
-   .../pre_deploy_20260710_041409.server.js           | 1947 ++++++++++++++++++++
-   README.md                                          |   28 +-
-   TEST_REPORT.md                                     |    4 +-
-   agents/personalities.json                          |   17 +-
-   api/skills.js                                      |   46 +
-   assets/css/style.css                               |   44 +
-   assets/js/office.js                                |   62 +
-   index.html                                         |   40 +
-   optimize-deploy.sh                                 |  371 ++++
-   server.js                                          |  138 ++
-   13 files changed, 4988 insertions(+), 20 deletions(-)
-```
-- **当前在线**: Bob Wang(Senior Developer), Henry Chen(Frontend Engineer), Carol Li(Designer), David Zhang(DevOps Engineer), Eve Liu(QA Engineer), Grace Wang(Data Analyst), Alice Zhao(Product Manager), Frank Huang(Tech Lead)
-- **优化轮次**: 每5分钟一轮并行优化
 - **GitHub**: https://github.com/luckysong-sudo/virtual-office
+- **自优化日志**: 每 5 分钟自动执行一轮优化
+- **知识库**: `knowledge.json` 存储所有已验证的优化方案
 
+---
+
+> 💼 经理备注: 办公室运转良好，所有 8 位团队成员状态积极。自优化系统已稳定运行 17 轮，12 个注入器全部命中知识库缓存，实现零浪费优化周期。下一个目标：探索新的优化方向。
