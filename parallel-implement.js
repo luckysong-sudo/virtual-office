@@ -17,7 +17,7 @@ const TEAM = [
     { id: 'david', name: 'David Zhang', role: 'DevOps Engineer', file: 'server.js', focus: '安全加固和CORS配置', desc: '加强服务器安全、CORS、HTTPS', keywords: ['安全', 'CORS', 'HTTPS', '头', 'header', '防护'] },
     { id: 'eve', name: 'Eve Liu', role: 'QA Engineer', file: 'server.js', focus: '输入验证和错误处理', desc: '增强输入验证、边界处理、容错', keywords: ['校验', '验证', '边界', '输入', 'sanitize', 'validate'] },
     { id: 'grace', name: 'Grace Wang', role: 'Data Analyst', file: 'api/skills.js', focus: '技能执行引擎优化', desc: '优化技能引擎、数据处理、指标', keywords: ['数据', '分析', 'metric', '指标', '统计'] },
-    { id: 'alice', name: 'Alice Zhao', role: 'Product Manager', file: 'index.html', focus: '用户体验和交互优化', desc: '优化用户体验、交互、引导流程', keywords: ['体验', '引导', 'onboarding', '交互', 'UX'] },
+    { id: 'alice', name: 'Alice Zhao', role: 'Product Manager', file: 'index.html', focus: '用户体验和交互优化', desc: '优化用户体验、交互、引导流程', keywords: ['体验', '引导', 'onboarding', '交互', 'UX', '欢迎', '新手'], alwaysApply: true },
     { id: 'frank', name: 'Frank Huang', role: 'Tech Lead', file: 'agents/personalities.json', focus: '角色配置和系统提示', desc: '优化角色配置、系统提示词', keywords: ['配置', '提示', '系统提示', 'persona', 'role', '优化', '更新', 'meta'], alwaysApply: true },
 ];
 
@@ -62,7 +62,8 @@ function applyImprovements(agentId, response) {
 
     // Check if agent's response contains relevant keywords
     const hasKeywords = agent.keywords.some(k => reply.includes(k));
-    if (!hasKeywords) {
+    // PM and TechLead always produce value (they make decisions, not just code)
+    if (!hasKeywords && agent.id !== 'alice' && agent.id !== 'frank') {
         log(`  ⚠️ ${agentId} 的回复未包含${agent.focus}相关关键词，跳过代码修改`);
         return changes;
     }
@@ -245,6 +246,7 @@ skill_analyze_metrics: {
             break;
         }
         case 'alice': {
+            // Alice always applies UX improvements regardless of keyword match
             changes.push({
                 file: 'index.html',
                 content: `\n<!-- Alice's UX: Onboarding tooltip system -->
