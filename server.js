@@ -97,11 +97,11 @@ const SKILLS = {
     git_commit: { name: '📦 Git提交', desc: '提交代码更改', execute: async (agentId, args) => {
         const { execSync } = require('child_process');
         try { 
-            execSync('git add -A', { cwd: PROJECT_DIR });
-            execSync(`git commit -m "${args.message}"`, { cwd: PROJECT_DIR });
+            execSync('git add -A', { cwd: PROJECT_DIR, stdio: 'pipe' });
+            execSync(`git commit -m "${args.message}"`, { cwd: PROJECT_DIR, stdio: 'pipe' });
             return { success: true, message: 'Commit successful' };
         } catch(e) { 
-            return { success: false, error: e.stderr || e.message }; 
+            return { success: false, error: e.stderr?.toString() || e.message }; 
         }
     }},
     git_push: { name: '🚀 Git推送', desc: '推送到远程仓库', execute: async (agentId, args) => {
