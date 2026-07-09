@@ -1,22 +1,35 @@
-# Virtual Office - 虚拟办公室
+# Virtual Office - 虚拟办公室 v2
 
-一个基于 PHP + JavaScript 的虚拟办公室 Web 世界。内置多个 AI 智能体角色，它们在一个可视化的办公室场景中自由活动、工作、交流。
+一个基于 PHP + SQLite + Vanilla JS 的虚拟办公室 Web 世界。内置 8 个由 Agnes AI 驱动的虚拟员工，他们在可视化的办公室场景中自由活动、工作、交流。
 
-## 🏢 功能特性
+## ✨ v2 新功能
 
-- **可视化办公室场景** - Canvas 绘制的楼层平面图，包含多个功能区域
-- **8 个 AI 智能体角色** - 产品经理、高级工程师、设计师、DevOps、QA、技术负责人、数据科学家、前端开发
-- **实时移动模拟** - 智能体在办公室中自由走动，偶尔相互互动
-- **对话系统** - 点击任何角色发起对话，下达任务或闲聊
-- **任务管理系统** - 创建任务并分配给团队成员
-- **环境聊天** - 智能体之间会随机进行环境对话
-- **缩放和平移** - 支持鼠标滚轮缩放和拖拽平移
+- 🤖 **Agnes AI 集成** — 每个角色都有独立的 personality 配置文件，通过 OpenAI 兼容 API 驱动真实对话
+- 💬 **Agent 间对话** — 角色之间会自动进行环境对话，使用 Agnes AI 生成回复
+- 📡 **实时事件流** — 左侧面板滚动显示办公室事件（任务分配、聊天、走动等）
+- 👤 **角色详情面板** — 查看员工的效率、状态、位置、专长等详细信息
+- 📋 **任务管理系统** — 创建任务并分配给团队成员
+- 🗺️ **6 个功能区域** — 大堂、工程区、设计区、运维区、会议室、休息区
+- 🪴 **办公室装饰** — 绿植、咖啡机等细节
+
+## 🏢 角色阵容
+
+| 角色 | 代号 | 部门 | 性格 |
+|------|------|------|------|
+| Alice Chen | 👩‍💼 | 产品经理 | 条理清晰，战略规划 |
+| Bob Wang | 👨‍💻 | 高级工程师 | 技术直球，解决方案导向 |
+| Carol Li | 👩‍🎨 | UI/UX 设计师 | 创意十足，以人为本 |
+| David Zhang | 🧑‍🔧 | DevOps | 务实高效，安全意识强 |
+| Eve Liu | 👩‍🔬 | QA 工程师 | 严谨细致，系统化思维 |
+| Frank Wu | 👨‍💼 | 技术负责人 | 沉稳远见，善于指导 |
+| Grace Zhao | 👩‍🏫 | 数据科学家 | 分析驱动，好奇心强 |
+| Henry Xu | 👨‍💻 | 前端开发 | 活力四射，前端极客 |
 
 ## 🚀 快速开始
 
 ### 前置要求
-- PHP 7.4+ (带 SQLite3 扩展)
-- 任意 Web 服务器 (Apache/Nginx/PHP 内置服务器)
+- PHP 7.4+（需启用 `sqlite3` 和 `curl` 扩展）
+- Agnes API（可选，用于 AI 对话）
 
 ### 本地运行
 
@@ -25,75 +38,68 @@ cd virtual-office
 php -S localhost:8080
 ```
 
-然后打开 `http://localhost:8080`
+打开 `http://localhost:8080`
 
-### Docker 运行
+### 配置 Agnes AI
 
 ```bash
-docker run -p 8080:80 \
-  -v $(pwd):/var/www/html \
-  --name virtual-office \
-  php:8.2-apache
+export AGNES_API_URL="http://your-agnes-server:8000/v1"
+export AGNES_API_KEY="your-api-key"
 ```
+
+不配置也可运行，会回退到默认回复。
 
 ## 📁 项目结构
 
 ```
 virtual-office/
-├── index.html              # 主页面
+├── index.html                  # 主页面
 ├── api/
-│   └── index.php           # PHP API 后端 (含 SQLite 数据库)
+│   └── index.php               # PHP API 后端 + SQLite
+├── agents/
+│   └── personalities.json      # 角色人格配置文件
 ├── assets/
-│   ├── css/
-│   │   └── style.css       # 样式表
-│   └── js/
-│       └── office.js       # 前端应用逻辑
-├── data/                   # SQLite 数据库目录 (自动生成)
+│   ├── css/style.css           # 样式
+│   └── js/office.js            # 前端应用
+├── data/                       # SQLite 数据库（自动生成）
 └── README.md
 ```
 
-## 👥 团队成员
-
-| 角色 | 代号 | 部门 | 特点 |
-|------|------|------|------|
-| Alice Chen | 👩‍💼 | 产品管理 | 组织能力强，战略规划 |
-| Bob Wang | 👨‍💻 | 工程 | 技术直球，解决方案导向 |
-| Carol Li | 👩‍🎨 | 设计 | 创意十足，用户视角 |
-| David Zhang | 🧑‍🔧 | 运维 | 务实高效，安全意识强 |
-| Eve Liu | 👩‍🔬 | 质量 | 注重细节，方法严谨 |
-| Frank Wu | 👨‍💻 | 工程 | 经验丰富，善于指导 |
-| Grace Zhao | 👩‍🏫 | 数据分析 | 数据驱动，好奇心强 |
-| Henry Xu | 👨‍💻 | 工程 | 充满活力，前端专家 |
-
 ## 🔌 API 端点
-
-所有端点通过 `api/index.php?endpoint=<name>` 访问
 
 | 端点 | 方法 | 说明 |
 |------|------|------|
 | `agents` | GET | 获取所有智能体 |
-| `agents/:id` | GET | 获取单个智能体详情 |
-| `chat` | POST | 与智能体对话 |
-| `tasks` | GET/POST | 获取/创建任务 |
+| `agents/:id` | GET | 获取单个智能体 |
+| `chat` | POST | 与智能体对话（AI 驱动） |
+| `agent-chat` | POST | 智能体间对话（AI 驱动） |
+| `tasks` | GET/POST | 任务管理 |
+| `events` | GET | 办公室事件流 |
 | `update` | POST | 更新智能体状态 |
-| `status` | GET | 获取办公室整体状态 |
+| `status` | GET | 办公室整体状态 |
+| `personality/:id` | GET | 获取角色人格配置 |
+
+## 🎮 操作指南
+
+- **点击角色头像** → 打开聊天面板
+- **鼠标滚轮** → 缩放地图
+- **拖拽空白区域** → 平移地图
+- **工具栏按钮** → 缩放/重置视图
+- **新建任务** → 分配给团队成员
+- **左侧事件流** → 观察办公室动态
 
 ## 🛠 自定义
 
-### 添加新的智能体
+### 添加新角色
 
-在 `api/index.php` 的 seed 部分添加：
-
-```php
-['new_id', 'New Name', 'Role', '🎭', 'department', 'status', 'mood', x, y, tx, ty, speed, task, productivity]
-```
-
-并在 `generateAgentResponse()` 的 `$responses` 数组中添加对应的回复模板。
+1. 在 `api/index.php` 的 seed 数组中添加
+2. 在 `agents/personalities.json` 中配置人格
+3. 重启服务
 
 ### 修改办公室布局
 
 编辑 `assets/js/office.js` 中的 `OFFICE.rooms` 数组。
 
-## 📝 License
+## License
 
 MIT

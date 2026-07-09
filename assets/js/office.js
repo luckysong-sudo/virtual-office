@@ -1,6 +1,6 @@
 /**
- * Virtual Office - Frontend Application
- * Manages the interactive office world, agent movement, and communication
+ * Virtual Office - Frontend Application v2
+ * Interactive office world with AI agents, event stream, and detail panels
  */
 
 const API = './api/index.php';
@@ -11,46 +11,43 @@ const state = {
     selectedAgent: null,
     conversations: {},
     tasks: [],
+    events: [],
     zoom: 1,
     offsetX: 0,
     offsetY: 0,
-    isDragging: false,
-    dragStart: { x: 0, y: 0 },
     simulationRunning: true,
-    moveTimers: {},
 };
 
-// ===== Office Dimensions =====
+// ===== Office Layout =====
 const OFFICE = {
     width: 1200,
     height: 800,
     rooms: [
-        { id: 'lobby', name: '大堂', x: 400, y: 50, w: 400, h: 120 },
-        { id: 'engineering', name: '工程区', x: 50, y: 200, w: 350, h: 250 },
-        { id: 'design', name: '设计区', x: 450, y: 200, w: 300, h: 250 },
-        { id: 'ops', name: '运维区', x: 800, y: 200, w: 350, h: 250 },
-        { id: 'meeting', name: '会议室', x: 100, y: 500, w: 400, h: 150 },
-        { id: 'break', name: '休息区', x: 600, y: 500, w: 500, h: 150 },
+        { id: 'lobby', name: '大堂', x: 400, y: 50, w: 400, h: 120, color: 'rgba(15, 23, 42, 0.6)' },
+        { id: 'engineering', name: '工程区', x: 50, y: 200, w: 350, h: 250, color: 'rgba(30, 41, 59, 0.8)' },
+        { id: 'design', name: '设计区', x: 450, y: 200, w: 300, h: 250, color: 'rgba(30, 41, 59, 0.8)' },
+        { id: 'ops', name: '运维区', x: 800, y: 200, w: 350, h: 250, color: 'rgba(30, 41, 59, 0.8)' },
+        { id: 'meeting', name: '会议室', x: 100, y: 500, w: 400, h: 150, color: 'rgba(30, 41, 59, 0.8)' },
+        { id: 'break', name: '休息区', x: 600, y: 500, w: 500, h: 150, color: 'rgba(30, 41, 59, 0.8)' },
     ]
 };
 
-// ===== Initialization =====
+// ===== Init =====
 document.addEventListener('DOMContentLoaded', () => {
     initCanvas();
-    loadAgents();
-    loadTasks();
+    loadAllData();
     setupEventListeners();
     startSimulation();
+    startEventStream();
     
-    // Hide loading screen
     setTimeout(() => {
         const ls = document.getElementById('loading-screen');
         ls.style.opacity = '0';
         setTimeout(() => ls.style.display = 'none', 500);
-    }, 2200);
+    }, 2000);
 });
 
-// ===== Canvas Setup =====
+// ===== Canvas =====
 function initCanvas() {
     const canvas = document.getElementById('floor-plan');
     const ctx = canvas.getContext('2d');
@@ -61,31 +58,28 @@ function initCanvas() {
         drawFloorPlan(ctx);
     }
     resize();
-    window.addEventListener('resize', resize);
     
-    // Pan & Zoom
     const container = document.querySelector('.office-canvas');
     container.addEventListener('wheel', (e) => {
         e.preventDefault();
-        const delta = e.deltaY > 0 ? -0.1 : 0.1;
-        state.zoom = Math.max(0.3, Math.min(3, state.zoom + delta));
+        state.zoom = Math.max(0.3, Math.min(3, state.zoom + (e.deltaY > 0 ? -0.1 : 0.1)));
         document.getElementById('zoom-level').textContent = Math.round(state.zoom * 100) + '%';
         updateCanvasTransform();
     });
     
-    // Drag to pan
     let isPanning = false;
     container.addEventListener('mousedown', (e) => {
         if (e.target === canvas || e.target === container) {
             isPanning = true;
-            state.dragStart = { x: e.clientX - state.offsetX, y: e.clientY - state.offsetY };
+            state.offsetX = e.clientX - state.offsetX;
+            state.offsetY = e.clientY - state.offsetY;
             container.style.cursor = 'grabbing';
         }
     });
     window.addEventListener('mousemove', (e) => {
         if (isPanning) {
-            state.offsetX = e.clientX - state.dragStart.x;
-            state.offsetY = e.clientY - state.dragStart.y;
+            state.offsetX = e.clientX - state.offsetX;
+            state.offsetY = e.clientY - state.offsetY;
             updateCanvasTransform();
         }
     });
@@ -93,18 +87,15 @@ function initCanvas() {
         isPanning = false;
         container.style.cursor = 'grab';
     });
-    
     container.style.cursor = 'grab';
 }
 
 function drawFloorPlan(ctx) {
     const W = OFFICE.width, H = OFFICE.height;
-    
-    // Background grid
     ctx.fillStyle = '#16213e';
     ctx.fillRect(0, 0, W, H);
     
-    // Grid lines
+    // Grid
     ctx.strokeStyle = 'rgba(255,255,255,0.03)';
     ctx.lineWidth = 1;
     for (let x = 0; x < W; x += 40) {
@@ -116,84 +107,57 @@ function drawFloorPlan(ctx) {
     
     // Rooms
     OFFICE.rooms.forEach(room => {
-        // Room background
-        ctx.fillStyle = 'rgba(30, 41, 59, 0.8)';
-        ctx.strokeStyle = 'rgba(59, 130, 246, 0.3)';
+        ctx.fillStyle = room.color;
+        ctx.strokeStyle = 'rgba(59, 130, 246, 0.25)';
         ctx.lineWidth = 2;
         roundRect(ctx, room.x, room.y, room.w, room.h, 12);
-        ctx.fill();
-        ctx.stroke();
+        ctx.fill(); ctx.stroke();
         
-        // Room label
-        ctx.fillStyle = 'rgba(148, 163, 184, 0.5)';
-        ctx.font = '12px sans-serif';
+        ctx.fillStyle = 'rgba(148, 163, 184, 0.4)';
+        ctx.font = '11px sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText(room.name.toUpperCase(), room.x + room.w / 2, room.y + 20);
+        ctx.fillText(room.name.toUpperCase(), room.x + room.w / 2, room.y + 18);
     });
     
-    // Corridor
-    ctx.fillStyle = 'rgba(22, 33, 62, 0.5)';
+    // Corridors
+    ctx.fillStyle = 'rgba(22, 33, 62, 0.4)';
     ctx.fillRect(0, 170, W, 30);
     ctx.fillRect(0, 470, W, 30);
     ctx.fillRect(400, 170, 30, 300);
     ctx.fillRect(770, 170, 30, 300);
     
-    // Plants decoration
-    const plantPositions = [
-        [30, 100], [1170, 100], [30, 700], [1170, 700],
-        [580, 100], [620, 100], [580, 700], [620, 700]
-    ];
-    plantPositions.forEach(([px, py]) => {
-        ctx.font = '20px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText('🪴', px, py);
-    });
-    
-    // Coffee machine
-    ctx.font = '18px sans-serif';
-    ctx.fillText('☕', 850, 580);
-    ctx.font = '10px sans-serif';
-    ctx.fillStyle = 'rgba(148,163,184,0.4)';
-    ctx.fillText('咖啡机', 850, 600);
+    // Decorations
+    const plants = [[30,100],[1170,100],[30,700],[1170,700],[580,100],[620,100],[580,700],[620,700]];
+    plants.forEach(([px, py]) => { ctx.font='18px sans-serif'; ctx.textAlign='center'; ctx.fillText('🪴', px, py); });
+    ctx.font = '16px sans-serif'; ctx.fillText('☕', 850, 575);
+    ctx.font = '9px sans-serif'; ctx.fillStyle = 'rgba(148,163,184,0.3)'; ctx.fillText('咖啡机', 850, 595);
 }
 
 function roundRect(ctx, x, y, w, h, r) {
     ctx.beginPath();
-    ctx.moveTo(x + r, y);
-    ctx.lineTo(x + w - r, y);
-    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-    ctx.lineTo(x + w, y + h - r);
-    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-    ctx.lineTo(x + r, y + h);
-    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-    ctx.lineTo(x, y + r);
-    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y); ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+    ctx.lineTo(x+w,y+h-r); ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+    ctx.lineTo(x+r,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+    ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y);
     ctx.closePath();
 }
 
 function updateCanvasTransform() {
-    const canvas = document.getElementById('floor-plan');
-    const agentsLayer = document.getElementById('agents-layer');
-    const bubblesLayer = document.getElementById('bubbles-layer');
+    const els = [document.getElementById('floor-plan'), document.getElementById('agents-layer'), document.getElementById('bubbles-layer')];
     const t = `translate(${state.offsetX}px, ${state.offsetY}px) scale(${state.zoom})`;
-    [canvas, agentsLayer, bubblesLayer].forEach(el => {
+    els.forEach(el => {
+        el.style.position = 'absolute';
+        el.style.left = '0'; el.style.top = '0';
         el.style.transform = t;
         el.style.transformOrigin = '0 0';
     });
-    canvas.style.position = 'absolute';
-    canvas.style.left = '0'; canvas.style.top = '0';
-    agentsLayer.style.position = 'absolute';
-    agentsLayer.style.left = '0'; agentsLayer.style.top = '0';
-    bubblesLayer.style.position = 'absolute';
-    bubblesLayer.style.left = '0'; bubblesLayer.style.top = '0';
 }
 
 // ===== Data Loading =====
-async function apiCall(params = '', method = 'GET', body = null) {
-    const url = params ? `${API}?endpoint=${params}` : API;
+async function apiCall(endpoint, method = 'GET', body = null) {
+    const url = endpoint ? `${API}?endpoint=${endpoint}` : API;
     const opts = { method, headers: { 'Content-Type': 'application/json' } };
     if (body) opts.body = JSON.stringify(body);
-    
     try {
         const res = await fetch(url, opts);
         return await res.json();
@@ -203,21 +167,22 @@ async function apiCall(params = '', method = 'GET', body = null) {
     }
 }
 
-async function loadAgents() {
-    const data = await apiCall('agents');
-    if (data.success && data.agents) {
-        state.agents = data.agents;
+async function loadAllData() {
+    const [agentsRes, tasksRes] = await Promise.all([
+        apiCall('agents'),
+        apiCall('tasks'),
+    ]);
+    
+    if (agentsRes.success && agentsRes.agents) {
+        state.agents = agentsRes.agents;
         renderAgentList();
         renderAgentsOnCanvas();
         updateOfficeStats();
     }
-}
-
-async function loadTasks() {
-    const data = await apiCall('tasks');
-    if (data.success && data.tasks) {
-        state.tasks = data.tasks;
-        document.getElementById('task-count').textContent = data.tasks.length;
+    
+    if (tasksRes.success && tasksRes.tasks) {
+        state.tasks = tasksRes.tasks;
+        document.getElementById('task-count').textContent = tasksRes.tasks.length;
     }
 }
 
@@ -260,10 +225,7 @@ function renderAgentsOnCanvas() {
             <div class="agent-label">${agent.name.split(' ')[0]}</div>
             <div class="agent-task-label">${agent.current_task || ''}</div>
         `;
-        div.addEventListener('click', (e) => {
-            e.stopPropagation();
-            selectAgent(agent.id);
-        });
+        div.addEventListener('click', (e) => { e.stopPropagation(); selectAgent(agent.id); });
         layer.appendChild(div);
     });
 }
@@ -271,6 +233,7 @@ function renderAgentsOnCanvas() {
 function updateOfficeStats() {
     const total = state.agents.length;
     const avgProd = Math.round(state.agents.reduce((s, a) => s + parseFloat(a.productivity || 0), 0) / total);
+    document.getElementById('agent-count').textContent = total;
     document.getElementById('avg-productivity').textContent = avgProd;
 }
 
@@ -278,7 +241,6 @@ function updateOfficeStats() {
 function selectAgent(agentId) {
     state.selectedAgent = agentId;
     
-    // Highlight in list
     document.querySelectorAll('.agent-list-item').forEach(el => {
         el.classList.toggle('active', el.dataset.id === agentId);
     });
@@ -286,7 +248,6 @@ function selectAgent(agentId) {
     const agent = state.agents.find(a => a.id === agentId);
     if (!agent) return;
     
-    // Show panel
     document.getElementById('panel-placeholder').style.display = 'none';
     document.getElementById('panel-content').style.display = 'flex';
     
@@ -299,13 +260,13 @@ function selectAgent(agentId) {
         <span class="status-badge">${agent.status}</span>
     `;
     
-    // Init conversation
     if (!state.conversations[agentId]) {
         state.conversations[agentId] = [];
     }
     renderMessages(agentId);
+    renderDetail(agent);
+    switchTab('chat');
     
-    // Focus input
     document.getElementById('chat-input').focus();
 }
 
@@ -320,7 +281,6 @@ function renderMessages(agentId) {
         div.textContent = msg.content;
         container.appendChild(div);
     });
-    
     container.scrollTop = container.scrollHeight;
 }
 
@@ -331,7 +291,6 @@ function sendMessage() {
     
     input.value = '';
     
-    // Add user message
     if (!state.conversations[state.selectedAgent]) {
         state.conversations[state.selectedAgent] = [];
     }
@@ -340,31 +299,26 @@ function sendMessage() {
     const agentId = state.selectedAgent;
     renderMessages(agentId);
     
-    // Show typing indicator
+    // Typing indicator
     const container = document.getElementById('panel-messages');
     const typing = document.createElement('div');
     typing.className = 'chat-msg agent talking-indicator';
-    typing.textContent = '...';
+    typing.textContent = '⌨️ 正在输入...';
     typing.id = 'typing-indicator';
     container.appendChild(typing);
     container.scrollTop = container.scrollHeight;
     
-    // Send to API
-    apiCall('chat', 'POST', {
-        agent_id: agentId,
-        message: message
-    }).then(data => {
-        const indicator = document.getElementById('typing-indicator');
-        if (indicator) indicator.remove();
-        
-        if (data.reply) {
-            state.conversations[agentId].push({ type: 'agent', content: data.reply });
-            renderMessages(agentId);
+    apiCall('chat', 'POST', { agent_id: agentId, message: message })
+        .then(data => {
+            const indicator = document.getElementById('typing-indicator');
+            if (indicator) indicator.remove();
             
-            // Show speech bubble on canvas
-            showSpeechBubble(agentId, data.reply);
-        }
-    });
+            if (data.reply) {
+                state.conversations[agentId].push({ type: 'agent', content: data.reply });
+                renderMessages(agentId);
+                showSpeechBubble(agentId, data.reply);
+            }
+        });
 }
 
 function showSpeechBubble(agentId, text) {
@@ -378,62 +332,155 @@ function showSpeechBubble(agentId, text) {
     bubble.style.left = agent.x + 'px';
     bubble.style.top = (agent.y - 30) + 'px';
     layer.appendChild(bubble);
-    
-    // Auto-remove after 5s
-    setTimeout(() => bubble.remove(), 5000);
+    setTimeout(() => bubble.remove(), 6000);
 }
 
-// ===== Simulation Loop =====
+// ===== Tabs =====
+function switchTab(tabName) {
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === tabName);
+    });
+    document.querySelectorAll('.tab-panel').forEach(panel => {
+        panel.style.display = panel.id === `tab-${tabName}` ? 'flex' : 'none';
+        panel.style.flexDirection = 'column';
+    });
+}
+
+// ===== Detail Panel =====
+function renderDetail(agent) {
+    const content = document.getElementById('detail-content');
+    const prod = parseFloat(agent.productivity || 0);
+    const prodClass = prod >= 85 ? 'high' : prod >= 60 ? 'medium' : 'low';
+    
+    content.innerHTML = `
+        <div class="detail-avatar-large">${agent.avatar}</div>
+        <div class="detail-name-large">${agent.name}</div>
+        <div class="detail-role-large">${agent.role}</div>
+        
+        <div class="detail-section">
+            <h4>基本信息</h4>
+            <div class="detail-row"><span class="label">状态</span><span class="value status-${agent.status}">${agent.status}</span></div>
+            <div class="detail-row"><span class="label">心情</span><span class="value">${agent.mood || 'neutral'}</span></div>
+            <div class="detail-row"><span class="label">部门</span><span class="value">${agent.department}</span></div>
+            <div class="detail-row"><span class="label">当前位置</span><span class="value">(${Math.round(agent.x)}, ${Math.round(agent.y)})</span></div>
+        </div>
+        
+        <div class="detail-section">
+            <h4>工作效率</h4>
+            <div class="detail-row">
+                <span class="label">生产力</span>
+                <span class="value">${prod}%</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill ${prodClass}" style="width:${prod}%"></div></div>
+        </div>
+        
+        <div class="detail-section">
+            <h4>当前任务</h4>
+            <div class="detail-row"><span class="value" style="font-size:0.8rem">${agent.current_task || '空闲中'}</span></div>
+        </div>
+        
+        <div class="detail-section">
+            <h4>正在交流</h4>
+            <div class="detail-row"><span class="value">${agent.talking_to ? '与 ' + agent.talking_to + ' 聊天' : '无'}</span></div>
+        </div>
+    `;
+}
+
+// ===== Event Stream =====
+function startEventStream() {
+    loadEvents();
+    setInterval(loadEvents, 5000);
+}
+
+async function loadEvents() {
+    const data = await apiCall('events?limit=15');
+    if (data.success && data.events) {
+        const list = document.getElementById('event-list');
+        const newEvents = data.events.filter(e => !state.events.find(old => old.id === e.id));
+        
+        newEvents.forEach(ev => {
+            const time = ev.timestamp ? ev.timestamp.slice(11, 16) : '--:--';
+            const icons = { conversation: '💬', task_assigned: '📋', meeting: '🤝', coffee: '☕' };
+            const icon = icons[ev.event_type] || '📌';
+            
+            const div = document.createElement('div');
+            div.className = 'event-item';
+            div.innerHTML = `<span class="event-time">${time}</span>${icon} ${ev.description || ''}`;
+            list.prepend(div);
+            
+            // Keep max 30 events visible
+            while (list.children.length > 30) list.removeChild(list.lastChild);
+        });
+        
+        state.events = data.events;
+    }
+}
+
+// ===== Simulation =====
 function startSimulation() {
     setInterval(simulationTick, 2000);
-    setInterval(ambientChat, 15000);
+    setInterval(ambientChat, 12000);
+    setInterval(autoMoveAgents, 8000);
 }
 
 function simulationTick() {
     if (!state.simulationRunning) return;
     
     state.agents.forEach(agent => {
-        // Move towards target
         const dx = agent.target_x - agent.x;
         const dy = agent.target_y - agent.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
         
         if (dist > 2) {
             const speed = parseFloat(agent.speed || 1);
-            agent.x += (dx / dist) * speed * 15;
-            agent.y += (dy / dist) * speed * 15;
+            agent.x += (dx / dist) * speed * 12;
+            agent.y += (dy / dist) * speed * 12;
         } else {
-            // Pick new random position in a room
             const room = OFFICE.rooms[Math.floor(Math.random() * OFFICE.rooms.length)];
             agent.target_x = room.x + 40 + Math.random() * (room.w - 80);
             agent.target_y = room.y + 40 + Math.random() * (room.h - 80);
             
-            // Occasionally change status
-            if (Math.random() < 0.1) {
-                const statuses = ['working', 'idle', 'coding', 'creative', 'testing', 'monitoring', 'researching'];
+            if (Math.random() < 0.08) {
+                const statuses = ['working','idle','coding','creative','testing','monitoring','researching'];
                 agent.status = statuses[Math.floor(Math.random() * statuses.length)];
+                updateAgentDOM(agent);
             }
         }
         
-        // Update DOM position
-        const el = document.getElementById(`agent-${agent.id}`);
-        if (el) {
-            el.style.left = agent.x + 'px';
-            el.style.top = agent.y + 'px';
-        }
-        
-        // Update task label
-        const taskLabel = el?.querySelector('.agent-task-label');
-        if (taskLabel && agent.current_task) {
-            taskLabel.textContent = agent.current_task;
-        }
+        updateAgentDOM(agent);
     });
 }
 
-// Ambient conversation between agents
+function updateAgentDOM(agent) {
+    const el = document.getElementById(`agent-${agent.id}`);
+    if (!el) return;
+    el.style.left = agent.x + 'px';
+    el.style.top = agent.y + 'px';
+    
+    const body = el.querySelector('.agent-body');
+    if (body) {
+        body.className = 'agent-body ' + (agent.status || 'idle');
+    }
+    
+    const taskLabel = el.querySelector('.agent-task-label');
+    if (taskLabel) taskLabel.textContent = agent.current_task || '';
+}
+
+function autoMoveAgents() {
+    if (!state.simulationRunning) return;
+    // Randomly move a couple agents to simulate busyness
+    const shuffled = [...state.agents].sort(() => Math.random() - 0.5).slice(0, 2);
+    shuffled.forEach(agent => {
+        const room = OFFICE.rooms[Math.floor(Math.random() * OFFICE.rooms.length)];
+        agent.target_x = room.x + 40 + Math.random() * (room.w - 80);
+        agent.target_y = room.y + 40 + Math.random() * (room.h - 80);
+    });
+}
+
+// Ambient conversations between agents
 function ambientChat() {
     if (!state.simulationRunning || state.agents.length < 2) return;
-    if (Math.random() > 0.3) return; // 30% chance
+    if (Math.random() > 0.25) return;
     
     const i = Math.floor(Math.random() * state.agents.length);
     const j = (i + 1 + Math.floor(Math.random() * (state.agents.length - 1))) % state.agents.length;
@@ -448,7 +495,6 @@ function ambientChat() {
     
     showToast(phrases[Math.floor(Math.random() * phrases.length)]);
     
-    // Make them walk toward each other
     const mx = (a.x + b.x) / 2;
     const my = (a.y + b.y) / 2;
     a.target_x = mx - 30; a.target_y = my;
@@ -474,7 +520,7 @@ function populateAssignees() {
     const sel = document.getElementById('task-assignee');
     sel.innerHTML = '<option value="">不指定分配</option>';
     state.agents.forEach(a => {
-        sel.innerHTML += `<option value="${a.id}">${a.name} (${a.role})</option>`;
+        sel.innerHTML += `<option value="${a.id}">${a.avatar} ${a.name} (${a.role})</option>`;
     });
 }
 
@@ -483,7 +529,7 @@ async function createTask() {
     if (!title) { showToast('请输入任务标题'); return; }
     
     const data = await apiCall('tasks', 'POST', {
-        title: title,
+        title,
         description: document.getElementById('task-desc').value.trim(),
         assigned_to: document.getElementById('task-assignee').value || null,
         priority: document.getElementById('task-priority').value,
@@ -493,12 +539,7 @@ async function createTask() {
     if (data.created) {
         showToast('✅ 任务已创建！');
         closeModal();
-        loadTasks();
-        
-        // Notify assigned agent
-        if (data.assigned_to) {
-            showToast(`📨 已向 ${state.agents.find(a => a.id === data.assigned_to)?.name} 分配任务`);
-        }
+        loadAllData();
     }
 }
 
@@ -515,7 +556,6 @@ function toggleSimulation() {
     showToast(state.simulationRunning ? '🟢 模拟已恢复' : '⏸️ 模拟已暂停');
 }
 
-// ===== Zoom Controls =====
 function zoomIn() {
     state.zoom = Math.min(3, state.zoom + 0.15);
     document.getElementById('zoom-level').textContent = Math.round(state.zoom * 100) + '%';
@@ -534,7 +574,6 @@ function resetView() {
     updateCanvasTransform();
 }
 
-// ===== Toast Notifications =====
 function showToast(message) {
     const toast = document.getElementById('toast');
     toast.textContent = message;
