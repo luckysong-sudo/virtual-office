@@ -116,8 +116,8 @@
     "last_optimized": "2026-07-09T20:00:45.874Z",
     "optimization_round": 14,
     "parallel_mode": true,
-    "last_hired": "Employee_2",
-    "hire_date": "2026-07-09T19:53:33.606Z"
+    "last_hired": "Employee_3",
+    "hire_date": "2026-07-09T20:03:33.613Z"
   },
   "agents": [
     {
@@ -137,6 +137,15 @@
       "avatar": "👤",
       "x": 150,
       "y": 130
+    },
+    {
+      "name": "Employee_3",
+      "role": "UI Designer",
+      "department": "QA",
+      "specialty": "Various",
+      "avatar": "👤",
+      "x": 200,
+      "y": 160
     }
   ]
 }
