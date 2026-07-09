@@ -7,11 +7,6 @@
     <link rel="stylesheet" href="assets/css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
 </head>
-<!-- [HENRY_PAGE_LOADER_START] -->
-<div id="page-loader" style="position:fixed;inset:0;background:#f0f4f8;display:flex;align-items:center;justify-content:center;z-index:9999;font-size:3rem;">🏢</div>
-<script>setTimeout(function(){var l=document.getElementById("page-loader");if(l){l.style.opacity="0";setTimeout(function(){l.remove()},300);}},500);</script>
-<!-- [HENRY_PAGE_LOADER_END] -->
-
 <body>
     <div id="loading-screen">
         <div class="loader">
@@ -186,15 +181,5 @@
     <div class="toast" id="toast" style="display:none;"></div>
 
     <script src="assets/js/office.js"></script>
-
-<!-- [HENRY_KEYBOARD_SHORTCUTS_START] -->
-<script>
-document.addEventListener("keydown", function(e) {
-    if ((e.ctrlKey || e.metaKey) && e.key === "k") { e.preventDefault(); var si=document.getElementById("searchInput"); if(si)si.focus(); }
-    if (e.key === "Escape") { document.querySelectorAll(".modal").forEach(function(el){el.style.display="none";}); }
-});
-</script>
-<!-- [HENRY_KEYBOARD_SHORTCUTS_END] -->
-
 </body>
 </html>

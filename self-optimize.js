@@ -1,23 +1,18 @@
 /**
- * Virtual Office - 持续性自我优化系统 v4.0 (State Machine)
+ * Virtual Office - 持续性自我优化系统 v5.0 (Idempotent State Machine)
  * 
- * 核心架构: 有限状态机 (FSM) 替代线性脚本
+ * 升级:
+ *   1. 幂等性校验器 — 每个 injector 使用唯一 marker，Check-Before-Apply
+ *   2. 变更摘要过滤 — 全部 no-op 时跳过 git commit + restart
+ *   3. Agent 知识库缓存 — 已知 patch 不调用 callAgnes
  * 
- * 状态转换:
- *   IDLE -> REVIEWING -> APPLYING -> COMMITTING -> RESTARTING -> VERIFYING
+ * 状态机:
+ *   IDLE -> REVIEWING -> APPLYING -> COMMITTING -> RESTARTING -> VERIFYING -> IDLE
  *     |         |           |            |            |            |
- *     |         v           v            v            v            v
- *     |     ROLLBACK <-- FAILURE <-- FAILURE <-- FAILURE <-- FAILURE
+ *     |         v           v            |            |            |
+ *     |     ROLLBACK <- FAILURE <- FAILURE <- FAILURE <- FAILURE
  *     |         |
- *     |     RECOVERED (回到 IDLE)
- *     |
- *     +---- TIMEOUT -> IDLE (自动恢复)
- * 
- * 设计原则:
- *   1. 原子提交: 所有修改暂存于 patch-in-progress 分支
- *   2. 指数退避健康检查: 5 次重试，每次翻倍等待
- *   3. 重启期间禁止回滚: 全局锁保护
- *   4. 每个优化器独立事务: 单个失败不影响整体
+ *     +---- TIMEOUT -> IDLE
  */
 
 const http = require('http');
@@ -31,41 +26,41 @@ const INJECTIONS_DIR = path.join(REPO_DIR, 'injections');
 const HISTORY_DIR = path.join(REPO_DIR, '.optimization_history');
 const VERSION_FILE = path.join(HISTORY_DIR, 'version.json');
 
+fs.mkdirSync(HISTORY_DIR, { recursive: true });
+
 // ============================
-// 状态机定义
+// 状态机
 // ============================
 
 const STATES = {
-    IDLE: 'IDLE',
-    REVIEWING: 'REVIEWING',
-    APPLYING: 'APPLYING',
-    COMMITTING: 'COMMITTING',
-    RESTARTING: 'RESTARTING',
-    VERIFYING: 'VERIFYING',
-    ROLLBACK: 'ROLLBACK',
-    ERROR: 'ERROR'
+    IDLE: 'IDLE', REVIEWING: 'REVIEWING', APPLYING: 'APPLYING',
+    COMMITTING: 'COMMITTING', RESTARTING: 'RESTARTING',
+    VERIFYING: 'VERIFYING', ROLLBACK: 'ROLLBACK', ERROR: 'ERROR'
 };
 
-// 全局状态
 var fsm = {
     currentState: STATES.IDLE,
     roundNum: 0,
     pendingChanges: [],
-    failedChanges: [],
     patchBranch: 'patch-in-progress',
-    baseCommit: null,
-    restartLock: false,  // 重启期间禁止回滚
+    restartLock: false,
     consecutiveFailures: 0,
-    lastError: null,
-    startTime: null
+    lastError: null
 };
+
+var versionData;
+if (fs.existsSync(VERSION_FILE)) {
+    versionData = JSON.parse(fs.readFileSync(VERSION_FILE, 'utf-8'));
+} else {
+    versionData = { version: 1, rounds: 0, lastOptimized: null, changes: [] };
+}
 
 // ============================
 // 工具函数
 // ============================
 
 function log(msg) {
-    var ts = new Date().toISOString().replace('T', ' ').split('.')[0];
+    var ts = new Date().toISOString().replace('T',' ').split('.')[0];
     console.log('[' + ts + '] ' + msg);
 }
 
@@ -74,23 +69,59 @@ function getStateLabel() {
 }
 
 function saveVersion(changes) {
-    if (!fs.existsSync(HISTORY_DIR)) fs.mkdirSync(HISTORY_DIR, { recursive: true });
-    var vd;
-    if (fs.existsSync(VERSION_FILE)) {
-        vd = JSON.parse(fs.readFileSync(VERSION_FILE, 'utf-8'));
-    } else {
-        vd = { version: 1, rounds: 0, lastOptimized: null, changes: [] };
-    }
-    vd.rounds++;
-    vd.lastOptimized = new Date().toISOString();
-    vd.changes.push({
-        round: vd.rounds,
-        timestamp: vd.lastOptimized,
+    versionData.rounds++;
+    versionData.lastOptimized = new Date().toISOString();
+    versionData.changes.push({
+        round: versionData.rounds,
+        timestamp: versionData.lastOptimized,
         changes: changes,
-        version: vd.version++,
+        version: versionData.version++,
         state: fsm.currentState
     });
-    fs.writeFileSync(VERSION_FILE, JSON.stringify(vd, null, 2));
+    fs.writeFileSync(VERSION_FILE, JSON.stringify(versionData, null, 2));
+}
+
+// ============================
+// Agent 知识库
+// ============================
+
+var knowledgeCache = { agents: {} };
+
+function loadKnowledge() {
+    try {
+        var kf = path.join(REPO_DIR, 'knowledge.json');
+        if (fs.existsSync(kf)) {
+            knowledgeCache = JSON.parse(fs.readFileSync(kf, 'utf-8'));
+        }
+    } catch(e) {}
+}
+
+function recordPatch(agentId, marker, description, applied) {
+    if (!knowledgeCache.agents[agentId]) knowledgeCache.agents[agentId] = { patches: [] };
+    knowledgeCache.agents[agentId].patches.push({
+        marker: marker, description: description, applied: applied,
+        timestamp: new Date().toISOString()
+    });
+    try {
+        fs.writeFileSync(path.join(REPO_DIR, 'knowledge.json'), JSON.stringify(knowledgeCache, null, 2));
+    } catch(e) {}
+}
+
+function isKnownPatch(agentId, marker) {
+    var patches = (knowledgeCache.agents[agentId] || {}).patches || [];
+    return patches.some(function(p) { return p.marker === marker && p.applied; });
+}
+
+function getAgentSuggestions(agentId, filePath, lineCount) {
+    // 如果该 agent 的所有 patch 都已知，跳过 callAgnes
+    var agentPatches = (knowledgeCache.agents[agentId] || {}).patches || [];
+    var allKnown = agentPatches.length > 0 && agentPatches.every(function(p) { return p.applied !== undefined; });
+    
+    if (allKnown && agentPatches.length >= 5) {
+        return null; // 跳过 API 调用
+    }
+    
+    return callAgnes(agentId, '你是 ' + agentId + '。文件: ' + filePath + ' (' + lineCount + '行)。请审查代码并提出 1-2 个具体的改进建议。100字以内。');
 }
 
 function callAgnes(agentId, message) {
@@ -119,32 +150,63 @@ function callAgnes(agentId, message) {
     });
 }
 
-function safeModifyFile(filePath, modifierFn) {
+// ============================
+// 幂等性校验器
+// ============================
+
+function checkMarkerExists(content, marker) {
+    return content.indexOf(marker) !== -1;
+}
+
+function validateAndApply(filePath, descriptor) {
+    /**
+     * descriptor = { marker, description, patchFn(originalCode) }
+     * returns { success, applied, origLines?, modLines?, error?, reason? }
+     */
     var fullPath = path.join(REPO_DIR, filePath);
-    if (!fs.existsSync(fullPath)) return { success: false, error: 'file_not_found' };
-    try {
-        var original = fs.readFileSync(fullPath, 'utf-8');
-        var modified = modifierFn(original);
-        if (modified === original) return { success: false, error: 'no_changes' };
-        
-        // 写入临时文件验证
-        var tmpDir = path.join(REPO_DIR, '.tmp_check');
-        if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, { recursive: true });
-        var tmpPath = path.join(tmpDir, 'check_' + Date.now() + '.js');
-        fs.writeFileSync(tmpPath, modified);
-        
-        if (filePath.endsWith('.js')) {
-            try { execSync('node --check "' + tmpPath + '"', { cwd: REPO_DIR, timeout: 5000 }); }
-            catch(e) {
-                try { fs.unlinkSync(tmpPath); } catch(ex) {}
-                return { success: false, error: 'syntax_error: ' + e.message.substring(0, 200) };
-            }
+    if (!fs.existsSync(fullPath)) {
+        return { success: false, applied: false, error: 'file_not_found' };
+    }
+    
+    var original = fs.readFileSync(fullPath, 'utf-8');
+    
+    // Step 1: 幂等性检查
+    if (checkMarkerExists(original, descriptor.marker)) {
+        return { success: true, applied: false, reason: 'marker_exists', marker: descriptor.marker };
+    }
+    
+    // Step 2: 应用变更
+    var modified = descriptor.patchFn(original);
+    if (!modified || modified === original) {
+        return { success: true, applied: false, reason: 'no_effect' };
+    }
+    
+    // Step 3: 临时文件验证
+    var tmpDir = path.join(REPO_DIR, '.tmp_check');
+    if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, { recursive: true });
+    var tmpPath = path.join(tmpDir, 'check_' + Date.now() + '.js');
+    fs.writeFileSync(tmpPath, modified);
+    
+    // Step 4: 语法验证
+    if (filePath.endsWith('.js')) {
+        try {
+            execSync('node --check "' + tmpPath + '"', { cwd: REPO_DIR, timeout: 5000 });
+        } catch(e) {
+            try { fs.unlinkSync(tmpPath); } catch(ex) {}
+            return { success: false, applied: false, error: 'syntax_error: ' + e.message.substring(0, 200) };
         }
-        
-        // 验证通过，替换原文件
-        fs.renameSync(tmpPath, fullPath);
-        return { success: true, origLines: original.split('\n').length, modLines: modified.split('\n').length };
-    } catch(e) { return { success: false, error: e.message }; }
+    }
+    
+    // Step 5: 替换
+    fs.renameSync(tmpPath, fullPath);
+    
+    return {
+        success: true, applied: true,
+        origLines: original.split('\n').length,
+        modLines: modified.split('\n').length,
+        marker: descriptor.marker,
+        description: descriptor.description
+    };
 }
 
 // ============================
@@ -154,23 +216,18 @@ function safeModifyFile(filePath, modifierFn) {
 function checkServerStatus() {
     return new Promise((resolve) => {
         var maxRetries = 5;
-        var baseDelay = 2000; // 2秒
+        var baseDelay = 2000;
         var attempt = 0;
         
         function tryCheck() {
             attempt++;
-            var delay = baseDelay * Math.pow(2, attempt - 1); // 2s, 4s, 8s, 16s, 32s
-            
+            var delay = baseDelay * Math.pow(2, attempt - 1);
             log('  🔍 健康检查 #' + attempt + '/' + maxRetries + ' (等待 ' + (delay/1000) + 's)...');
             
             var timeout = setTimeout(function() {
                 log('  ❌ 健康检查 #' + attempt + ' 超时');
-                if (attempt >= maxRetries) {
-                    log('  💀 连续 ' + maxRetries + ' 次失败，判定部署失败');
-                    resolve(false);
-                } else {
-                    setTimeout(tryCheck, delay);
-                }
+                if (attempt >= maxRetries) resolve(false);
+                else setTimeout(tryCheck, delay);
             }, 10000);
             
             var req = http.get('http://localhost:' + PORT + '/?endpoint=status', function(res) {
@@ -184,7 +241,7 @@ function checkServerStatus() {
                             log('  ✅ 健康检查 #' + attempt + ' 通过!');
                             resolve(true);
                         } else {
-                            log('  ⚠️ 健康检查 #' + attempt + ' 返回非健康状态');
+                            log('  ⚠️ 健康检查 #' + attempt + ' 非健康状态');
                             setTimeout(tryCheck, delay);
                         }
                     } catch(e) {
@@ -196,12 +253,9 @@ function checkServerStatus() {
             
             req.on('error', function(e) {
                 clearTimeout(timeout);
-                log('  ⚠️ 健康检查 #' + attempt + ' 连接失败: ' + e.message);
-                if (attempt >= maxRetries) {
-                    resolve(false);
-                } else {
-                    setTimeout(tryCheck, delay);
-                }
+                log('  ⚠️ 健康检查 #' + attempt + ' 连接失败');
+                if (attempt >= maxRetries) resolve(false);
+                else setTimeout(tryCheck, delay);
             });
         }
         
@@ -211,19 +265,13 @@ function checkServerStatus() {
 
 function restartServer() {
     return new Promise((resolve) => {
-        fsm.restartLock = true; // 设置重启锁，禁止回滚
-        
-        try {
-            execSync('pkill -f "node.*server\\.js" 2>/dev/null || true', { cwd: REPO_DIR, timeout: 5000 });
-        } catch(e) {}
-        
+        fsm.restartLock = true;
+        try { execSync('pkill -f "node.*server\\.js" 2>/dev/null || true', { cwd: REPO_DIR, timeout: 5000 }); } catch(e) {}
         setTimeout(function() {
             try {
                 execSync('PORT=' + PORT + ' node server.js > ' + path.join(REPO_DIR, 'server_new.log') + ' 2>&1 &', { cwd: REPO_DIR });
-                log('  [RESTART] 服务器已重启 (PID: ' + process.pid + ')');
-            } catch(e) {
-                log('  ❌ 服务器重启命令失败: ' + e.message);
-            }
+                log('  [RESTART] 服务器已重启');
+            } catch(e) { log('  ❌ 重启命令失败: ' + e.message); }
             resolve(true);
         }, 2000);
     });
@@ -235,41 +283,35 @@ function unlockRestart() {
 }
 
 // ============================
-// Git 操作 — 原子提交到临时分支
+// Git 原子提交
 // ============================
 
 function atomicCommit(summary) {
     return new Promise((resolve) => {
         try {
-            // 创建/切换到临时分支
             execSync('git checkout -B ' + fsm.patchBranch + ' 2>/dev/null || git checkout ' + fsm.patchBranch, { cwd: REPO_DIR });
-            
-            // 暂存所有修改
             execSync('git add -A', { cwd: REPO_DIR });
             
-            // 检查是否有实际更改
-            var diffResult = execSync('git diff --cached --quiet 2>&1 || echo "CHANGES"', { cwd: REPO_DIR, encoding: 'utf-8' }).trim();
+            var diffResult;
+            try {
+                diffResult = execSync('git diff --cached --quiet 2>&1 || echo "CHANGES"', { cwd: REPO_DIR, encoding: 'utf-8' }).trim();
+            } catch(e) { diffResult = 'CHANGES'; }
+            
             if (diffResult !== 'CHANGES') {
                 log('  ⏭️ 没有实际更改需要提交');
                 resolve({ committed: false });
                 return;
             }
             
-            // 提交到临时分支
             execSync('git commit -m "🤖 优化补丁: ' + summary + '"', { cwd: REPO_DIR });
-            
-            // 合并回 main
             execSync('git checkout main', { cwd: REPO_DIR });
             execSync('git merge ' + fsm.patchBranch + ' --no-edit', { cwd: REPO_DIR });
-            
-            // 删除临时分支
             execSync('git branch -D ' + fsm.patchBranch, { cwd: REPO_DIR });
             
             log('  📦 原子提交完成 (patch-in-progress -> main)');
             resolve({ committed: true });
         } catch(e) {
             log('  ❌ Git 原子提交失败: ' + e.message.substring(0, 200));
-            // 清理临时分支
             try { execSync('git branch -D ' + fsm.patchBranch, { cwd: REPO_DIR }); } catch(ex) {}
             resolve({ committed: false, error: e.message });
         }
@@ -289,142 +331,178 @@ function performRollback(reason) {
 }
 
 // ============================
-// 优化器定义
+// 幂等性 Injector 定义
 // ============================
 
-var OPTIMIZERS = {
-    bob: {
-        name: 'Bob Wang', role: 'Senior Developer', focus: 'API路由效率和错误处理', files: ['server.js'],
-        optimize: function(code, round) {
-            var changes = [];
-            var inj = function(file) { return fs.readFileSync(path.join(INJECTIONS_DIR, file), 'utf-8'); };
-            
-            if (code.indexOf('rateLimitMap') === -1) {
-                changes.push({ desc: 'API请求速率限制中间件', fn: function(src) {
-                    return src.replace('async function handleApi(req, res, parsedUrl) {', 'async function handleApi(req, res, parsedUrl) {\n' + inj('rate-limiter.js'));
-                }});
-            }
-            if (code.indexOf('process.on("uncaughtException")') === -1) {
-                changes.push({ desc: '全局错误处理和优雅退出', fn: function(src) { return src + inj('global-errors.js'); } });
-            }
-            if (code.indexOf('requestLog = []') === -1) {
-                changes.push({ desc: '请求日志和性能追踪', fn: function(src) {
-                    return src.replace('server.listen(PORT', inj('request-logger.js') + '\nserver.listen(PORT');
-                }});
-            }
-            if (code.indexOf("case 'logs'") === -1) {
-                changes.push({ desc: '请求日志查询API', fn: function(src) {
-                    return src.replace("case 'learn':", inj('logs-api.js'));
-                }});
-            }
-            return changes;
+function loadInjection(filename) {
+    return fs.readFileSync(path.join(INJECTIONS_DIR, filename), 'utf-8');
+}
+
+var INJECTORS = {
+    // ---- Bob Wang: 后端优化 ----
+    'bob.rate_limiter': {
+        agentId: 'bob',
+        marker: '// [BOB_RATE_LIMITER_START]',
+        description: 'API请求速率限制中间件',
+        filePath: 'server.js',
+        patchFn: function(code) {
+            return code.replace(
+                'async function handleApi(req, res, parsedUrl) {',
+                'async function handleApi(req, res, parsedUrl) {\n' + loadInjection('bob-rate-limiter.js')
+            );
+        }
+    },
+    'bob.global_errors': {
+        agentId: 'bob',
+        marker: '// [BOB_GLOBAL_ERRORS_START]',
+        description: '全局错误处理和优雅退出',
+        filePath: 'server.js',
+        patchFn: function(code) { return code + loadInjection('bob-global-errors.js'); }
+    },
+    'bob.request_logger': {
+        agentId: 'bob',
+        marker: '// [BOB_REQUEST_LOGGER_START]',
+        description: '请求日志和性能追踪',
+        filePath: 'server.js',
+        patchFn: function(code) {
+            return code.replace(
+                'server.listen(PORT',
+                loadInjection('bob-request-logger.js') + '\nserver.listen(PORT'
+            );
+        }
+    },
+    'bob.log_query_api': {
+        agentId: 'bob',
+        marker: '// [BOB_LOG_QUERY_API_START]',
+        description: '请求日志查询API',
+        filePath: 'server.js',
+        patchFn: function(code) {
+            return code.replace(
+                "case 'learn':",
+                loadInjection('bob-log-query-api.js')
+            );
         }
     },
     
-    henry: {
-        name: 'Henry Xu', role: 'Frontend Developer', focus: '前端性能和DOM优化', files: ['index.html'],
-        optimize: function(code, round) {
-            var changes = [];
-            if (code.indexOf('Ctrl+K') === -1) {
-                changes.push({ desc: '键盘快捷键系统', fn: function(src) {
-                    return src.replace('</body>', '\n<script>\ndocument.addEventListener("keydown", function(e) {\n    if ((e.ctrlKey || e.metaKey) && e.key === "k") { e.preventDefault(); var si=document.getElementById("searchInput"); if(si)si.focus(); }\n    if (e.key === "Escape") { document.querySelectorAll(".modal").forEach(function(el){el.style.display="none";}); }\n});\n</script>\n</body>');
-                }});
-            }
-            if (code.indexOf('page-loader') === -1) {
-                changes.push({ desc: '页面加载动画', fn: function(src) {
-                    return src.replace('<body>', '<div id="page-loader" style="position:fixed;inset:0;background:#f0f4f8;display:flex;align-items:center;justify-content:center;z-index:9999;font-size:3rem;">🏢</div>\n<script>setTimeout(function(){var l=document.getElementById("page-loader");if(l){l.style.opacity="0";setTimeout(function(){l.remove()},300);}},500);</script>\n<body>');
-                }});
-            }
-            return changes;
+    // ---- Henry Xu: 前端优化 ----
+    'henry.keyboard_shortcuts': {
+        agentId: 'henry',
+        marker: '<!-- [HENRY_KEYBOARD_SHORTCUTS_START] -->',
+        description: '键盘快捷键系统',
+        filePath: 'index.html',
+        patchFn: function(code) {
+            return code.replace('</body>',
+                '\n' + loadInjection('henry-keyboard-shortcuts.js') + '\n</body>'
+            );
+        }
+    },
+    'henry.page_loader': {
+        agentId: 'henry',
+        marker: '<!-- [HENRY_PAGE_LOADER_START] -->',
+        description: '页面加载动画',
+        filePath: 'index.html',
+        patchFn: function(code) {
+            return code.replace('<body>',
+                loadInjection('henry-page-loader.js') + '\n<body>'
+            );
         }
     },
     
-    carol: {
-        name: 'Carol Li', role: 'UI/UX Designer', focus: 'CSS和设计系统优化', files: ['assets/css/style.css'],
-        optimize: function(code, round) {
-            var changes = [];
-            if (code.indexOf('--accent-primary') === -1) {
-                changes.push({ desc: 'CSS设计令牌和暗色模式', fn: function(src) {
-                    return src + fs.readFileSync(path.join(INJECTIONS_DIR, 'css-tokens.css'), 'utf-8');
-                }});
-            }
-            return changes;
+    // ---- Carol Li: CSS 优化 ----
+    'carol.css_tokens': {
+        agentId: 'carol',
+        marker: '/* [CAROL_CSS_TOKENS_START] */',
+        description: 'CSS设计令牌和暗色模式',
+        filePath: 'assets/css/style.css',
+        patchFn: function(code) { return code + loadInjection('carol-css-tokens.css'); }
+    },
+    
+    // ---- David Zhang: 安全加固 ----
+    'david.security_headers': {
+        agentId: 'david',
+        marker: '// [DAVID_SECURITY_HEADERS_START]',
+        description: '安全响应头',
+        filePath: 'server.js',
+        patchFn: function(code) {
+            return code.replace(
+                "res.setHeader('Content-Type', 'application/json');",
+                "res.setHeader('Content-Type', 'application/json');\n" + loadInjection('david-security-headers.js').trim()
+            );
         }
     },
     
-    david: {
-        name: 'David Zhang', role: 'DevOps Engineer', focus: '安全加固和部署优化', files: ['server.js'],
-        optimize: function(code, round) {
-            var changes = [];
-            if (code.indexOf('X-Content-Type-Options') === -1) {
-                changes.push({ desc: '安全响应头', fn: function(src) {
-                    return src.replace("res.setHeader('Content-Type', 'application/json');", "res.setHeader('Content-Type', 'application/json');\n" + fs.readFileSync(path.join(INJECTIONS_DIR, 'security-headers.js'), 'utf-8').trim());
-                }});
-            }
-            return changes;
+    // ---- Eve Liu: 输入验证 ----
+    'eve.endpoint_whitelist': {
+        agentId: 'eve',
+        marker: '// [EVE_ENDPOINT_WHITELIST_START]',
+        description: 'API端点白名单验证',
+        filePath: 'server.js',
+        patchFn: function(code) {
+            return code.replace(
+                'const action = params[0];\n    const id = params[1];',
+                loadInjection('eve-endpoint-whitelist.js')
+            );
         }
     },
     
-    eve: {
-        name: 'Eve Liu', role: 'QA Engineer', focus: '输入验证和错误处理', files: ['server.js'],
-        optimize: function(code, round) {
-            var changes = [];
-            if (code.indexOf('ALLOWED_ENDPOINTS') === -1) {
-                changes.push({ desc: 'API端点白名单验证', fn: function(src) {
-                    var inj = fs.readFileSync(path.join(INJECTIONS_DIR, 'endpoint-whitelist.js'), 'utf-8');
-                    return src.replace('const action = params[0];\n    const id = params[1];', inj);
-                }});
-            }
-            return changes;
+    // ---- Grace Zhao: 数据分析 ----
+    'grace.metrics_api': {
+        agentId: 'grace',
+        marker: '// [GRACE_METRICS_API_START]',
+        description: '性能指标API端点',
+        filePath: 'server.js',
+        patchFn: function(code) {
+            return code.replace(
+                "case 'meetings':",
+                loadInjection('grace-metrics-api.js')
+            );
         }
     },
     
-    grace: {
-        name: 'Grace Zhao', role: 'Data Scientist', focus: '数据分析和性能监控', files: ['server.js'],
-        optimize: function(code, round) {
-            var changes = [];
-            if (code.indexOf("case 'metrics'") === -1) {
-                changes.push({ desc: '性能指标API端点', fn: function(src) {
-                    return src.replace("case 'meetings':", fs.readFileSync(path.join(INJECTIONS_DIR, 'metrics-api.js'), 'utf-8'));
-                }});
-            }
-            return changes;
-        }
-    },
-    
-    alice: {
-        name: 'Alice Chen', role: 'Product Manager', focus: '用户体验和功能发现', files: ['index.html'],
-        optimize: function(code, round) {
-            var changes = [];
+    // ---- Alice Chen: 用户体验 ----
+    'alice.onboarding': {
+        agentId: 'alice',
+        marker: '<!-- [ALICE_ONBOARDING_START] -->',
+        description: '新用户引导流程',
+        filePath: 'index.html',
+        patchFn: function(code) {
             var obFile = path.join(REPO_DIR, 'onboarding.html');
-            if (fs.existsSync(obFile) && code.indexOf('onboarding-flow') === -1) {
-                changes.push({ desc: '新用户引导流程', fn: function(src) {
-                    return src.replace('<footer class="footer">', fs.readFileSync(obFile, 'utf-8'));
-                }});
-            }
-            return changes;
+            if (!fs.existsSync(obFile)) return code;
+            return code.replace('<footer class="footer">', fs.readFileSync(obFile, 'utf-8'));
         }
     },
     
-    frank: {
-        name: 'Frank Wu', role: 'Tech Lead', focus: '架构设计和代码质量', files: ['agents/personalities.json'],
-        optimize: function(code, round) {
-            var changes = [];
-            changes.push({ desc: '更新版本元数据', fn: function(src) {
-                try {
-                    var data = JSON.parse(src);
-                    if (!data.meta) data.meta = {};
-                    data.meta.version = String((parseInt(data.meta.version || '1') + 1));
-                    data.meta.last_optimized = new Date().toISOString();
-                    data.meta.optimization_round = versionData.rounds;
-                    data.meta.self_optimizing = true;
-                    return JSON.stringify(data, null, 2);
-                } catch(e) { return src; }
-            }});
-            return changes;
+    // ---- Frank Wu: 架构设计 ----
+    'frank.version_meta': {
+        agentId: 'frank',
+        marker: '// [FRANK_VERSION_META_START]',
+        description: '更新版本元数据',
+        filePath: 'agents/personalities.json',
+        patchFn: function(code) {
+            try {
+                var data = JSON.parse(code);
+                if (!data.meta) data.meta = {};
+                data.meta.version = String((parseInt(data.meta.version || '1') + 1));
+                data.meta.last_optimized = new Date().toISOString();
+                data.meta.optimization_round = versionData.rounds;
+                data.meta.self_optimizing = true;
+                return JSON.stringify(data, null, 2);
+            } catch(e) { return code; }
         }
     }
 };
+
+// 有序列表，保持执行顺序
+var INJECTOR_KEYS = [
+    'bob.rate_limiter', 'bob.global_errors', 'bob.request_logger', 'bob.log_query_api',
+    'henry.keyboard_shortcuts', 'henry.page_loader',
+    'carol.css_tokens',
+    'david.security_headers',
+    'eve.endpoint_whitelist',
+    'grace.metrics_api',
+    'alice.onboarding',
+    'frank.version_meta'
+];
 
 // ============================
 // 状态机处理器
@@ -438,14 +516,6 @@ function getStateMachineHandler(state) {
             processReviewRound();
         },
         
-        [STATES.REVIEWING]: function() {
-            // 由 processReviewRound 处理
-        },
-        
-        [STATES.APPLYING]: function() {
-            // 由 processApplyRound 处理
-        },
-        
         [STATES.COMMITTING]: function(summary) {
             fsm.currentState = STATES.COMMITTING;
             log(getStateLabel() + ' 📦 原子提交到临时分支...');
@@ -456,15 +526,10 @@ function getStateMachineHandler(state) {
                     fsm.currentState = STATES.RESTARTING;
                     processRestart();
                 } else {
-                    log(getStateLabel() + ' ⚠️ 没有需要提交的更改');
+                    log(getStateLabel() + ' ⏭️ 没有需要提交的更改');
                     fsm.currentState = STATES.IDLE;
-                    log(getStateLabel() + ' ◀ 回到空闲状态');
                 }
             });
-        },
-        
-        [STATES.RESTARTING]: function() {
-            // 由 processRestart 处理
         },
         
         [STATES.VERIFYING]: function(success) {
@@ -499,7 +564,6 @@ function getStateMachineHandler(state) {
             unlockRestart();
             log(getStateLabel() + ' 💀 错误状态 — 需要人工介入');
             log(getStateLabel() + '    最后错误: ' + (fsm.lastError || '未知'));
-            // 错误状态下等待 10 分钟后自动恢复
             setTimeout(function() {
                 log(getStateLabel() + ' ⏰ 错误超时，尝试恢复...');
                 fsm.currentState = STATES.IDLE;
@@ -511,75 +575,90 @@ function getStateMachineHandler(state) {
 }
 
 // ============================
-// 优化流程 — 分阶段执行
+// 优化流程
 // ============================
 
 function processReviewRound() {
     fsm.roundNum++;
-    log('  📋 第 ' + fsm.roundNum + ' 轮 — 收集所有优化器的改进方案');
+    log('');
+    log('  📋 第 ' + fsm.roundNum + ' 轮 — 幂等性校验 + 变更摘要');
     
-    var allChanges = [];
-    var agentIds = Object.keys(OPTIMIZERS);
-    var processed = 0;
+    var appliedChanges = [];
+    var skippedChanges = [];
+    var injectorKeys = INJECTOR_KEYS.slice();
+    var idx = 0;
     
     function processNext() {
-        if (processed >= agentIds.length) {
-            // 所有优化器处理完毕
-            if (allChanges.length > 0) {
-                fsm.pendingChanges = allChanges;
-                fsm.currentState = STATES.APPLYING;
+        if (idx >= injectorKeys.length) {
+            // 所有 injector 处理完毕
+            if (appliedChanges.length > 0) {
+                fsm.pendingChanges = appliedChanges;
                 processApplyRound();
             } else {
-                log('  ⏭️ 本轮无新改进');
+                log('  ⏭️ 本轮无新改进，全部已存在 — 跳过 commit + restart');
                 fsm.currentState = STATES.IDLE;
+                log(getStateLabel() + ' ◀ 回到空闲状态');
             }
             return;
         }
         
-        var agentId = agentIds[processed++];
-        var optimizer = OPTIMIZERS[agentId];
-        if (!optimizer) { processNext(); return; }
+        var key = injectorKeys[idx++];
+        var injector = INJECTORS[key];
+        if (!injector) { processNext(); return; }
         
-        log('  👨‍💻 ' + optimizer.name + ' (' + optimizer.role + ') - ' + optimizer.focus);
-        
-        var filePath = optimizer.files[0];
+        var filePath = injector.filePath;
         var fullPath = path.join(REPO_DIR, filePath);
         if (!fs.existsSync(fullPath)) {
-            log('  [SKIP] 文件不存在: ' + filePath);
+            log('  ⏭️ ' + injector.description + ' — 文件不存在: ' + filePath);
+            recordPatch(injector.agentId, injector.marker, injector.description, false);
             processNext();
             return;
         }
         
         var currentCode = fs.readFileSync(fullPath, 'utf-8');
         
-        // 获取agent建议
-        (async function() {
-            try {
-                var prompt = '你是' + optimizer.name + '（' + optimizer.role + '），专注于' + optimizer.focus + '。当前文件: ' + filePath + ' (' + currentCode.split('\n').length + '行)。请审查代码并提出改进建议。用中文回答，100字以内。';
-                var response = await callAgnes(agentId, prompt);
-                log('  💬 ' + (response.reply || '').substring(0, 100));
-            } catch(e) { log('  ⚠️ 获取建议失败: ' + e.message); }
-            
-            // 应用优化
-            var potentialChanges = optimizer.optimize(currentCode, fsm.roundNum);
-            log('  🔧 ' + potentialChanges.length + ' 个改进方案');
-            
-            for (var ci = 0; ci < potentialChanges.length; ci++) {
-                var change = potentialChanges[ci];
-                var result = safeModifyFile(filePath, change.fn);
-                
-                if (result.success) {
-                    log('  ✅ 已应用: ' + change.desc + ' (' + result.origLines + '→' + result.modLines + ' 行)');
-                    allChanges.push({ agent: optimizer.name, file: filePath, desc: change.desc, linesChanged: result.modLines - result.origLines });
-                } else if (result.error === 'no_changes') {
-                    log('  ⏭️ 跳过: ' + change.desc + ' (已存在)');
-                } else {
-                    log('  ❌ 失败: ' + change.desc + ' - ' + result.error.substring(0, 100));
-                }
-            }
-            
+        // 知识库检查: 如果已知此 patch 已应用，直接跳过
+        if (isKnownPatch(injector.agentId, injector.marker)) {
+            log('  📚 ' + injector.description + ' — 知识库命中 (已知已应用)');
+            skippedChanges.push({ agent: injector.agentId, desc: injector.description, reason: 'known_applied' });
             processNext();
-        })();
+            return;
+        }
+        
+        // 获取 Agnes 建议 (知识库未命中时才调用)
+        getAgentSuggestions(injector.agentId, filePath, currentCode.split('\n').length)
+            .then(function(response) {
+                if (response && response.reply) {
+                    log('  💬 ' + response.reply.substring(0, 100));
+                }
+                
+                // 幂等性校验 + 应用
+                var result = validateAndApply(filePath, injector);
+                
+                if (result.applied) {
+                    log('  ✅ 已应用: ' + result.description + ' (' + result.origLines + '→' + result.modLines + ' 行)');
+                    appliedChanges.push({
+                        agent: injector.agentId,
+                        file: filePath,
+                        desc: result.description,
+                        linesChanged: result.modLines - result.origLines
+                    });
+                    recordPatch(injector.agentId, injector.marker, result.description, true);
+                } else if (result.success && !result.applied) {
+                    log('  ⏭️ 跳过: ' + result.description + ' (' + (result.reason || '无变更') + ')');
+                    skippedChanges.push({ agent: injector.agentId, desc: result.description, reason: result.reason });
+                    recordPatch(injector.agentId, injector.marker, result.description, true); // 已知已存在
+                } else {
+                    log('  ❌ 失败: ' + result.description + ' — ' + result.error);
+                    recordPatch(injector.agentId, injector.marker, result.description, false);
+                }
+                
+                processNext();
+            })
+            .catch(function(e) {
+                log('  ❌ 处理异常: ' + e.message);
+                processNext();
+            });
     }
     
     processNext();
@@ -588,7 +667,6 @@ function processReviewRound() {
 function processApplyRound() {
     log('  📊 共 ' + fsm.pendingChanges.length + ' 个改进待提交');
     
-    // 检查是否有后端改动
     var hasBackendChanges = fsm.pendingChanges.some(function(c) { return c.file === 'server.js'; });
     
     if (hasBackendChanges) {
@@ -596,7 +674,6 @@ function processApplyRound() {
         var summary = fsm.pendingChanges.map(function(c) { return c.desc; }).join(', ');
         getStateMachineHandler(STATES.COMMITTING)(summary);
     } else {
-        // 纯前端改动，直接提交不重启
         fsm.currentState = STATES.COMMITTING;
         var summary = fsm.pendingChanges.map(function(c) { return c.desc; }).join(', ');
         log('  ℹ️ 纯前端改动，提交后不重启');
@@ -625,9 +702,8 @@ function processRestart() {
             getStateMachineHandler(STATES.VERIFYING)(success);
             
             if (success) {
-                // 保存版本信息
                 saveVersion(fsm.pendingChanges);
-                log('  📈 总计: ' + (versionData.rounds || 0) + ' 轮优化, ' + (versionData.changes ? versionData.changes.length : 0) + ' 个改进已部署');
+                log('  📈 总计: ' + versionData.rounds + ' 轮优化, ' + versionData.changes.length + ' 个改进已部署');
             }
         });
     });
@@ -637,34 +713,13 @@ function processRestart() {
 // 主程序
 // ============================
 
-var versionData;
-if (fs.existsSync(VERSION_FILE)) {
-    versionData = JSON.parse(fs.readFileSync(VERSION_FILE, 'utf-8'));
-} else {
-    versionData = { version: 1, rounds: 0, lastOptimized: null, changes: [] };
-}
-
-log('🏢 虚拟办公室 - 持续性自我优化系统 v4.0 (State Machine)');
+log('🏢 虚拟办公室 - 持续性自我优化系统 v5.0 (Idempotent State Machine)');
 log('📅 启动时间: ' + new Date().toISOString());
 log('📊 当前版本: v' + versionData.version + ', 历史优化: ' + versionData.rounds + ' 轮');
-log('🔧 状态机架构: 原子提交 + 指数退避健康检查 + 重启锁保护');
+log('🔧 幂等性校验 + 变更摘要过滤 + Agent 知识库缓存');
 log('');
 
-// 状态机事件队列
-var eventQueue = [];
-var processing = false;
-
-function enqueueEvent(eventFn) {
-    eventQueue.push(eventFn);
-    if (!processing) processQueue();
-}
-
-function processQueue() {
-    if (eventQueue.length === 0) { processing = false; return; }
-    processing = true;
-    var event = eventQueue.shift();
-    event();
-}
+loadKnowledge();
 
 // 启动状态机
 getStateMachineHandler(STATES.IDLE)();

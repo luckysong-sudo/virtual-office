@@ -1,0 +1,107 @@
+{
+  "agents": {
+    "bob": {
+      "patches": [
+        {
+          "marker": "// [BOB_RATE_LIMITER_START]",
+          "description": "API请求速率限制中间件",
+          "applied": true,
+          "timestamp": "2026-07-09T22:27:00.984Z"
+        },
+        {
+          "marker": "// [BOB_GLOBAL_ERRORS_START]",
+          "description": "全局错误处理和优雅退出",
+          "applied": true,
+          "timestamp": "2026-07-09T22:27:01.019Z"
+        },
+        {
+          "marker": "// [BOB_REQUEST_LOGGER_START]",
+          "description": "请求日志和性能追踪",
+          "applied": true,
+          "timestamp": "2026-07-09T22:27:01.051Z"
+        },
+        {
+          "marker": "// [BOB_LOG_QUERY_API_START]",
+          "description": "请求日志查询API",
+          "applied": true,
+          "timestamp": "2026-07-09T22:27:01.077Z"
+        }
+      ]
+    },
+    "henry": {
+      "patches": [
+        {
+          "marker": "<!-- [HENRY_KEYBOARD_SHORTCUTS_START] -->",
+          "description": "键盘快捷键系统",
+          "applied": true,
+          "timestamp": "2026-07-09T22:27:01.079Z"
+        },
+        {
+          "marker": "<!-- [HENRY_PAGE_LOADER_START] -->",
+          "description": "页面加载动画",
+          "applied": true,
+          "timestamp": "2026-07-09T22:27:01.081Z"
+        }
+      ]
+    },
+    "carol": {
+      "patches": [
+        {
+          "marker": "/* [CAROL_CSS_TOKENS_START] */",
+          "description": "CSS设计令牌和暗色模式",
+          "applied": true,
+          "timestamp": "2026-07-09T22:27:01.082Z"
+        }
+      ]
+    },
+    "david": {
+      "patches": [
+        {
+          "marker": "// [DAVID_SECURITY_HEADERS_START]",
+          "description": "安全响应头",
+          "applied": true,
+          "timestamp": "2026-07-09T22:27:01.109Z"
+        }
+      ]
+    },
+    "eve": {
+      "patches": [
+        {
+          "marker": "// [EVE_ENDPOINT_WHITELIST_START]",
+          "description": "API端点白名单验证",
+          "applied": true,
+          "timestamp": "2026-07-09T22:27:01.140Z"
+        }
+      ]
+    },
+    "grace": {
+      "patches": [
+        {
+          "marker": "// [GRACE_METRICS_API_START]",
+          "description": "性能指标API端点",
+          "applied": true,
+          "timestamp": "2026-07-09T22:27:01.167Z"
+        }
+      ]
+    },
+    "alice": {
+      "patches": [
+        {
+          "marker": "<!-- [ALICE_ONBOARDING_START] -->",
+          "applied": true,
+          "timestamp": "2026-07-09T22:27:01.169Z"
+        }
+      ]
+    },
+    "frank": {
+      "patches": [
+        {
+          "marker": "// [FRANK_VERSION_META_START]",
+          "description": "更新版本元数据",
+          "applied": true,
+          "timestamp": "2026-07-09T22:27:01.170Z"
+        }
+      ]
+    }
+  }
+}
