@@ -115,6 +115,19 @@
     "version": "8.0",
     "last_optimized": "2026-07-09T19:40:45.085Z",
     "optimization_round": 10,
-    "parallel_mode": true
-  }
+    "parallel_mode": true,
+    "last_hired": "Employee_1",
+    "hire_date": "2026-07-09T19:43:17.671Z"
+  },
+  "agents": [
+    {
+      "name": "Employee_1",
+      "role": "Backend Engineer",
+      "department": "Engineering",
+      "specialty": "Various",
+      "avatar": "👤",
+      "x": 100,
+      "y": 100
+    }
+  ]
 }

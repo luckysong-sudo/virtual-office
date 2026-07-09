@@ -98,43 +98,19 @@ function recruitNewEmployee() {
     if (currentTeam.length < 12) {
         log(`✅ 团队规模${currentTeam.length}/12，符合招聘条件`);
         
-        // Ask Frank to recruit
-        const prompt = `你是Frank Huang，Tech Lead兼招聘经理。
-
-公司目前有${currentTeam.length}名员工，需要招聘新成员来扩展团队。
-
-招聘流程：
-1. 访问 https://internxt.com/temporary-email 获取临时邮箱
-2. 用临时邮箱在 https://platform.agnes-ai.com/settings/apiKeys 注册Agnes AI账户
-3. 获取API Key
-4. 为新员工定义角色（建议：测试工程师、后端开发、前端开发、UI设计师等）
-5. 返回JSON格式的员工信息：
-{
-    "name": "姓名",
-    "role": "职位",
-    "department": "部门",
-    "specialty": "专业技能",
-    "avatar": "emoji",
-    "apiKey": "从Agnes获取的API Key",
-    "x": 100 + (currentTeam.length * 50),
-    "y": 100 + (currentTeam.length * 30)
-}
-
-请用中文回答招聘计划。`;
+        // Directly create a new employee (simplified recruitment)
+        const newEmployee = {
+            name: `Employee_${currentTeam.length + 1}`,
+            role: ['Backend Engineer', 'Frontend Engineer', 'UI Designer', 'QA Engineer', 'Data Analyst'][currentTeam.length % 5],
+            department: ['Engineering', 'Design', 'QA', 'Data'][currentTeam.length % 4],
+            specialty: 'Various',
+            avatar: '👤',
+            x: 100 + currentTeam.length * 50,
+            y: 100 + currentTeam.length * 30
+        };
         
-        const response = callAgnes('frank', prompt);
-        // Parse response for JSON - response is {reply: string, agent: ...}
-        const replyText = response.reply || '';
-        const jsonMatch = replyText.match(/\{[\s\S]*"name"[\s\S]*\}/);
-        if (jsonMatch) {
-            const newEmployee = JSON.parse(jsonMatch[0]);
-            log(`🎉 新员工招聘成功: ${newEmployee.name} (${newEmployee.role})`);
-            return newEmployee;
-        } else {
-            log('⚠️ Frank的回复中没有找到有效的JSON，跳过招聘');
-            log(`💬 Frank回复预览: ${replyText.substring(0, 200)}...`);
-            return null;
-        }
+        log(`🎉 新员工招聘成功: ${newEmployee.name} (${newEmployee.role})`);
+        return newEmployee;
     } else {
         log('⏸️ 团队已满员(12人)，暂停招聘');
         return null;
