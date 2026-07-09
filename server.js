@@ -96,10 +96,13 @@ const SKILLS = {
     // Git operations
     git_commit: { name: '📦 Git提交', desc: '提交代码更改', execute: async (agentId, args) => {
         const { execSync } = require('child_process');
-        try { execSync('git add -A', { cwd: PROJECT_DIR });
-              execSync(`git commit -m "${args.message}"`, { cwd: PROJECT_DIR });
-              return { success: true, message: 'Commit successful' };
-        } catch(e) { return { success: false, error: e.message }; }
+        try { 
+            execSync('git add -A', { cwd: PROJECT_DIR });
+            execSync(`git commit -m "${args.message}"`, { cwd: PROJECT_DIR });
+            return { success: true, message: 'Commit successful' };
+        } catch(e) { 
+            return { success: false, error: e.stderr || e.message }; 
+        }
     }},
     git_push: { name: '🚀 Git推送', desc: '推送到远程仓库', execute: async (agentId, args) => {
         const { execSync } = require('child_process');
