@@ -607,3 +607,27 @@ function showToast(msg) {
     const t=document.getElementById('toast'); t.textContent=msg; t.style.display='block';
     clearTimeout(t._t); t._t=setTimeout(()=>t.style.display='none',3000);
 }
+
+
+// Enhanced debounce with leading/trailing options
+function debounce(func, wait, options = {}) {
+    let timeout, timerId, prevTime = 0;
+    return function executedFunction(...args) {
+        const now = Date.now();
+        const remaining = wait - (now - prevTime);
+        if (options.leading && now - prevTime < wait) {
+            prevTime = now;
+            func.apply(this, args);
+        } else if (remaining <= 0 || remaining > wait) {
+            if (timerId) { clearTimeout(timerId); timerId = null; }
+            prevTime = now;
+            func.apply(this, args);
+        } else if (!timerId) {
+            timerId = setTimeout(() => {
+                prevTime = options.trailing !== false ? Date.now() : 0;
+                timerId = null;
+                func.apply(this, args);
+            }, remaining);
+        }
+    };
+}
