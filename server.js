@@ -668,3 +668,15 @@ server.listen(PORT, '0.0.0.0', () => {
     console.log(`👥 Agents: ${store.agents.length} loaded`);
     console.log(`🔑 API Keys configured: ${Object.keys(process.env).filter(k => k.startsWith('AGNES_KEY_')).length} per-agent keys`);
 });
+
+
+// Performance tracking middleware
+function timingMiddleware(req, res, next) {
+    const start = Date.now();
+    res.on('finish', () => {
+        const duration = Date.now() - start;
+        console.log(`${req.method} ${req.url} - ${duration}ms`);
+    });
+    next();
+}
+app.use(timingMiddleware);
