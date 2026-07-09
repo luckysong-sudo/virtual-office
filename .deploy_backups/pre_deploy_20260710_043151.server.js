@@ -187,10 +187,6 @@ async function callAgnes(agent, personality, message, tempOverride) {
 async function handleApi(req, res, parsedUrl) {
     setCORSHeaders(req, res);
     res.setHeader('Content-Type', 'application/json');
-res.setHeader('X-Content-Type-Options', 'nosniff');
-    res.setHeader('X-Frame-Options', 'SAMEORIGIN');
-    res.setHeader('X-XSS-Protection', '1; mode=block');
-    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
     
     if (req.method === 'OPTIONS') { res.writeHead(200); res.end(); return; }
     
@@ -466,20 +462,7 @@ res.setHeader('X-Content-Type-Options', 'nosniff');
                 break;
             }
                 
-            
-            case 'metrics':
-                response.metrics = {
-                    uptime: process.uptime(),
-                    memory: process.memoryUsage(),
-                    cpu: process.cpuUsage(),
-                    agentsOnline: store.agents.length,
-                    totalConversations: store.conversations.length,
-                    totalEvents: store.events.length,
-                };
-                break;
-                
             case 'meetings':
-
                 if (req.method === 'POST') {
                     const meeting = {
                         id: store.nextId++,
@@ -530,14 +513,7 @@ res.setHeader('X-Content-Type-Options', 'nosniff');
                 break;
             }
                 
-            
-            case 'logs':
-                response.logs = requestLog.slice(-50);
-                response.totalLogs = requestLog.length;
-                break;
-                
             case 'learn':
-
                 if (data.agent_id && data.topic && data.content) {
                     const existing = store.memories.findIndex(m => m.agent_id === data.agent_id && m.topic === data.topic);
                     if (existing >= 0) {
@@ -607,43 +583,9 @@ const server = http.createServer((req, res) => {
     }
 });
 
-
-// Request logging
-var requestLog = [];
-function requestLogger(req, res, next) {
-    var start = Date.now();
-    res.on("finish", function() {
-        var entry = { method: req.method, path: req.url, status: res.statusCode, duration: Date.now()-start };
-        requestLog.push(entry);
-        if (requestLog.length > 1000) requestLog.shift();
-        console.log(entry.method + " " + req.url + " - " + entry.duration + "ms");
-    });
-    next();
-}
-
-
 server.listen(PORT, '0.0.0.0', () => {
     console.log(`🏢 Virtual Office running at http://localhost:${PORT}`);
     console.log(`🤖 Agnes AI API: ${process.env.AGNES_API_URL || 'https://apihub.agnes-ai.com/v1'}`);
     console.log(`👥 Agents: ${store.agents.length} loaded`);
     console.log(`🔑 API Keys configured: ${Object.keys(process.env).filter(k => k.startsWith('AGNES_KEY_')).length} per-agent keys`);
-});
-
-// Global error handling
-process.on("uncaughtException", function(err) {
-    console.error("[UNCAUGHT]", err.message);
-});
-
-process.on("unhandledRejection", function(reason) {
-    console.error("[UNHANDLED REJECTION]", reason);
-});
-
-process.on("SIGTERM", function() {
-    console.log("Received SIGTERM, shutting down...");
-    server.close(function() { process.exit(0); });
-});
-
-process.on("SIGINT", function() {
-    console.log("Received SIGINT, shutting down...");
-    server.close(function() { process.exit(0); });
 });

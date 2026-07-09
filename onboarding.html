@@ -1,0 +1,40 @@
+<div id="onboarding-flow" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.7);align-items:center;justify-content:center;">
+    <div style="background:white;border-radius:16px;padding:2rem;max-width:600px;max-height:80vh;overflow-y:auto;">
+        <div style="text-align:center;">
+            <h2 id="ob-title">Welcome!</h2>
+            <p id="ob-desc">Description here.</p>
+            <div id="ob-dots" style="display:flex;gap:0.5rem;justify-content:center;margin:1rem 0;"></div>
+            <div style="margin-top:1rem;display:flex;gap:1rem;justify-content:center;">
+                <button id="ob-prev" style="display:none;padding:0.5rem 1.5rem;border:1px solid #ddd;border-radius:8px;cursor:pointer;">← Prev</button>
+                <button id="ob-next" style="padding:0.5rem 1.5rem;background:#6366f1;color:white;border:none;border-radius:8px;cursor:pointer;">Next →</button>
+                <button id="ob-skip" style="padding:0.5rem 1.5rem;background:transparent;color:#666;border:1px solid #ddd;border-radius:8px;cursor:pointer;">Skip</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+(function(){
+    var steps=[
+        {t:'🏢 虚拟办公室',d:'8位AI同事，各有专长。点击角色可以聊天。'},
+        {t:'💬 与AI交流',d:'点击头像发消息，获得专业回答。'},
+        {t:'📋 管理任务',d:'按N创建任务，按B查看简报。'},
+        {t:'📽️ 组织会议',d:'让团队成员进入会议室讨论。'},
+        {t:'🔍 快捷键',d:'Ctrl+K搜索，Ctrl+D切换暗色模式。'}
+    ];
+    var s=0;
+    function show(){if(localStorage.getItem('ob'))return;s=0;upd();document.getElementById('onboarding-flow').style.display='flex';}
+    function upd(){
+        document.getElementById('ob-title').textContent=steps[s].t;
+        document.getElementById('ob-desc').textContent=steps[s].d;
+        document.getElementById('ob-prev').style.display=s>0?'inline-block':'none';
+        document.getElementById('ob-next').textContent=s===steps.length-1?'开始探索! 🎉':'下一步 →';
+        document.getElementById('ob-skip').style.display=s<steps.length-1?'inline-block':'none';
+        var h='';for(var i=0;i<steps.length;i++)h+='<div style="width:10px;height:10px;border-radius:50%;background:'+(i===s?'#6366f1':'#ddd')+'"></div>';
+        document.getElementById('ob-dots').innerHTML=h;
+    }
+    window.obNext=function(){if(s<steps.length-1)s++;else obClose();upd();};
+    window.obPrev=function(){if(s>0){s--;upd();}};
+    window.obClose=function(){document.getElementById('onboarding-flow').style.display='none';localStorage.setItem('ob','1');};
+    setTimeout(show,3000);
+})();
+</script>
