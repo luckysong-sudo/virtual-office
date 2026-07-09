@@ -1,0 +1,22 @@
+{
+  "Employee_1": {
+    "task": "API路由优化",
+    "file": "server.js",
+    "type": "backend",
+    "priority": "high",
+    "status": "assigned",
+    "assigned_at": "2026-07-09T19:59:19.994Z",
+    "collaborator": "bob",
+    "description": "优化API路由效率和错误处理中间件"
+  },
+  "Employee_2": {
+    "task": "前端性能优化",
+    "file": "assets/js/office.js",
+    "type": "frontend",
+    "priority": "medium",
+    "status": "assigned",
+    "assigned_at": "2026-07-09T19:59:19.994Z",
+    "collaborator": "henry",
+    "description": "优化DOM操作和渲染性能"
+  }
+}
