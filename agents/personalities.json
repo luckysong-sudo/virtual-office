@@ -110,5 +110,11 @@
       "性能优化",
       "WebGL"
     ]
+  },
+  "meta": {
+    "version": "8.0",
+    "last_optimized": "2026-07-09T18:57:08.572Z",
+    "optimization_round": 1,
+    "parallel_mode": true
   }
 }
