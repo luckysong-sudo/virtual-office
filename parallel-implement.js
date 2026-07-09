@@ -62,8 +62,8 @@ function applyImprovements(agentId, response) {
 
     // Check if agent's response contains relevant keywords
     const hasKeywords = agent.keywords.some(k => reply.includes(k));
-    // PM and TechLead always produce value (they make decisions, not just code)
-    if (!hasKeywords && agent.id !== 'alice' && agent.id !== 'frank') {
+    // PM and TechLead and DataAnalyst always produce value
+    if (!hasKeywords && ['alice', 'frank', 'grace'].includes(agent.id)) {
         log(`  ⚠️ ${agentId} 的回复未包含${agent.focus}相关关键词，跳过代码修改`);
         return changes;
     }
