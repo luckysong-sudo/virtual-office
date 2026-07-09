@@ -609,6 +609,649 @@ function showToast(msg) {
 }
 
 
+// Enhanced debounce with leading/trailing options
+function debounce(func, wait, options = {}) {
+    let timeout, timerId, prevTime = 0;
+    return function executedFunction(...args) {
+        const now = Date.now();
+        const remaining = wait - (now - prevTime);
+        if (options.leading && now - prevTime < wait) {
+            prevTime = now;
+            func.apply(this, args);
+        } else if (remaining <= 0 || remaining > wait) {
+            if (timerId) { clearTimeout(timerId); timerId = null; }
+            prevTime = now;
+            func.apply(this, args);
+        } else if (!timerId) {
+            timerId = setTimeout(() => {
+                prevTime = options.trailing !== false ? Date.now() : 0;
+                timerId = null;
+                func.apply(this, args);
+            }, remaining);
+        }
+    };
+}
+
+
+// Henry's optimization: render cache to avoid redundant redraws
+const renderCache = new Map();
+let lastRenderTime = 0;
+const RENDER_THROTTLE = 16; // ~60fps
+
+function throttledRender(renderFn) {
+    return function(...args) {
+        const now = Date.now();
+        if (now - lastRenderTime >= RENDER_THROTTLE) {
+            lastRenderTime = now;
+            return renderFn.apply(this, args);
+        }
+        // Skip this frame, but schedule next
+        requestAnimationFrame(() => throttledRender(renderFn)(...args));
+    };
+}
+
+// Henry's optimization: lazy load agents data
+function lazyLoadAgents(container) {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('loaded');
+                observer.unobserve(entry.target);
+            }
+        });
+    });
+    container.querySelectorAll('.agent-card').forEach(card => observer.observe(card));
+}
+
+
+// Henry's optimization: render cache to avoid redundant redraws
+const renderCache = new Map();
+let lastRenderTime = 0;
+const RENDER_THROTTLE = 16; // ~60fps
+
+function throttledRender(renderFn) {
+    return function(...args) {
+        const now = Date.now();
+        if (now - lastRenderTime >= RENDER_THROTTLE) {
+            lastRenderTime = now;
+            return renderFn.apply(this, args);
+        }
+        // Skip this frame, but schedule next
+        requestAnimationFrame(() => throttledRender(renderFn)(...args));
+    };
+}
+
+// Henry's optimization: lazy load agents data
+function lazyLoadAgents(container) {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('loaded');
+                observer.unobserve(entry.target);
+            }
+        });
+    });
+    container.querySelectorAll('.agent-card').forEach(card => observer.observe(card));
+}
+
+
+// Henry's optimization: render cache to avoid redundant redraws
+const renderCache = new Map();
+let lastRenderTime = 0;
+const RENDER_THROTTLE = 16; // ~60fps
+
+function throttledRender(renderFn) {
+    return function(...args) {
+        const now = Date.now();
+        if (now - lastRenderTime >= RENDER_THROTTLE) {
+            lastRenderTime = now;
+            return renderFn.apply(this, args);
+        }
+        // Skip this frame, but schedule next
+        requestAnimationFrame(() => throttledRender(renderFn)(...args));
+    };
+}
+
+// Henry's optimization: lazy load agents data
+function lazyLoadAgents(container) {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('loaded');
+                observer.unobserve(entry.target);
+            }
+        });
+    });
+    container.querySelectorAll('.agent-card').forEach(card => observer.observe(card));
+}
+
+
+// Henry's optimization: render cache to avoid redundant redraws
+const renderCache = new Map();
+let lastRenderTime = 0;
+const RENDER_THROTTLE = 16; // ~60fps
+
+function throttledRender(renderFn) {
+    return function(...args) {
+        const now = Date.now();
+        if (now - lastRenderTime >= RENDER_THROTTLE) {
+            lastRenderTime = now;
+            return renderFn.apply(this, args);
+        }
+        // Skip this frame, but schedule next
+        requestAnimationFrame(() => throttledRender(renderFn)(...args));
+    };
+}
+
+// Henry's optimization: lazy load agents data
+function lazyLoadAgents(container) {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('loaded');
+                observer.unobserve(entry.target);
+            }
+        });
+    });
+    container.querySelectorAll('.agent-card').forEach(card => observer.observe(card));
+}
+
+
+// Henry's optimization: render cache to avoid redundant redraws
+const renderCache = new Map();
+let lastRenderTime = 0;
+const RENDER_THROTTLE = 16; // ~60fps
+
+function throttledRender(renderFn) {
+    return function(...args) {
+        const now = Date.now();
+        if (now - lastRenderTime >= RENDER_THROTTLE) {
+            lastRenderTime = now;
+            return renderFn.apply(this, args);
+        }
+        // Skip this frame, but schedule next
+        requestAnimationFrame(() => throttledRender(renderFn)(...args));
+    };
+}
+
+// Henry's optimization: lazy load agents data
+function lazyLoadAgents(container) {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('loaded');
+                observer.unobserve(entry.target);
+            }
+        });
+    });
+    container.querySelectorAll('.agent-card').forEach(card => observer.observe(card));
+}
+
+
+// Henry's optimization: render cache to avoid redundant redraws
+const renderCache = new Map();
+let lastRenderTime = 0;
+const RENDER_THROTTLE = 16; // ~60fps
+
+function throttledRender(renderFn) {
+    return function(...args) {
+        const now = Date.now();
+        if (now - lastRenderTime >= RENDER_THROTTLE) {
+            lastRenderTime = now;
+            return renderFn.apply(this, args);
+        }
+        // Skip this frame, but schedule next
+        requestAnimationFrame(() => throttledRender(renderFn)(...args));
+    };
+}
+
+// Henry's optimization: lazy load agents data
+function lazyLoadAgents(container) {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('loaded');
+                observer.unobserve(entry.target);
+            }
+        });
+    });
+    container.querySelectorAll('.agent-card').forEach(card => observer.observe(card));
+}
+
+
+// Henry's optimization: render cache to avoid redundant redraws
+const renderCache = new Map();
+let lastRenderTime = 0;
+const RENDER_THROTTLE = 16; // ~60fps
+
+function throttledRender(renderFn) {
+    return function(...args) {
+        const now = Date.now();
+        if (now - lastRenderTime >= RENDER_THROTTLE) {
+            lastRenderTime = now;
+            return renderFn.apply(this, args);
+        }
+        // Skip this frame, but schedule next
+        requestAnimationFrame(() => throttledRender(renderFn)(...args));
+    };
+}
+
+// Henry's optimization: lazy load agents data
+function lazyLoadAgents(container) {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('loaded');
+                observer.unobserve(entry.target);
+            }
+        });
+    });
+    container.querySelectorAll('.agent-card').forEach(card => observer.observe(card));
+}
+
+
+// Henry's optimization: render cache to avoid redundant redraws
+const renderCache = new Map();
+let lastRenderTime = 0;
+const RENDER_THROTTLE = 16; // ~60fps
+
+function throttledRender(renderFn) {
+    return function(...args) {
+        const now = Date.now();
+        if (now - lastRenderTime >= RENDER_THROTTLE) {
+            lastRenderTime = now;
+            return renderFn.apply(this, args);
+        }
+        // Skip this frame, but schedule next
+        requestAnimationFrame(() => throttledRender(renderFn)(...args));
+    };
+}
+
+// Henry's optimization: lazy load agents data
+function lazyLoadAgents(container) {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('loaded');
+                observer.unobserve(entry.target);
+            }
+        });
+    });
+    container.querySelectorAll('.agent-card').forEach(card => observer.observe(card));
+}
+
+
+// Henry's optimization: render cache to avoid redundant redraws
+const renderCache = new Map();
+let lastRenderTime = 0;
+const RENDER_THROTTLE = 16; // ~60fps
+
+function throttledRender(renderFn) {
+    return function(...args) {
+        const now = Date.now();
+        if (now - lastRenderTime >= RENDER_THROTTLE) {
+            lastRenderTime = now;
+            return renderFn.apply(this, args);
+        }
+        // Skip this frame, but schedule next
+        requestAnimationFrame(() => throttledRender(renderFn)(...args));
+    };
+}
+
+// Henry's optimization: lazy load agents data
+function lazyLoadAgents(container) {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('loaded');
+                observer.unobserve(entry.target);
+            }
+        });
+    });
+    container.querySelectorAll('.agent-card').forEach(card => observer.observe(card));
+}
+
+
+// Henry's optimization: render cache to avoid redundant redraws
+const renderCache = new Map();
+let lastRenderTime = 0;
+const RENDER_THROTTLE = 16; // ~60fps
+
+function throttledRender(renderFn) {
+    return function(...args) {
+        const now = Date.now();
+        if (now - lastRenderTime >= RENDER_THROTTLE) {
+            lastRenderTime = now;
+            return renderFn.apply(this, args);
+        }
+        // Skip this frame, but schedule next
+        requestAnimationFrame(() => throttledRender(renderFn)(...args));
+    };
+}
+
+// Henry's optimization: lazy load agents data
+function lazyLoadAgents(container) {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('loaded');
+                observer.unobserve(entry.target);
+            }
+        });
+    });
+    container.querySelectorAll('.agent-card').forEach(card => observer.observe(card));
+}
+
+
+// Henry's optimization: render cache to avoid redundant redraws
+const renderCache = new Map();
+let lastRenderTime = 0;
+const RENDER_THROTTLE = 16; // ~60fps
+
+function throttledRender(renderFn) {
+    return function(...args) {
+        const now = Date.now();
+        if (now - lastRenderTime >= RENDER_THROTTLE) {
+            lastRenderTime = now;
+            return renderFn.apply(this, args);
+        }
+        // Skip this frame, but schedule next
+        requestAnimationFrame(() => throttledRender(renderFn)(...args));
+    };
+}
+
+// Henry's optimization: lazy load agents data
+function lazyLoadAgents(container) {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('loaded');
+                observer.unobserve(entry.target);
+            }
+        });
+    });
+    container.querySelectorAll('.agent-card').forEach(card => observer.observe(card));
+}
+
+
+// Henry's optimization: render cache to avoid redundant redraws
+const renderCache = new Map();
+let lastRenderTime = 0;
+const RENDER_THROTTLE = 16; // ~60fps
+
+function throttledRender(renderFn) {
+    return function(...args) {
+        const now = Date.now();
+        if (now - lastRenderTime >= RENDER_THROTTLE) {
+            lastRenderTime = now;
+            return renderFn.apply(this, args);
+        }
+        // Skip this frame, but schedule next
+        requestAnimationFrame(() => throttledRender(renderFn)(...args));
+    };
+}
+
+// Henry's optimization: lazy load agents data
+function lazyLoadAgents(container) {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('loaded');
+                observer.unobserve(entry.target);
+            }
+        });
+    });
+    container.querySelectorAll('.agent-card').forEach(card => observer.observe(card));
+}
+
+
+// Henry's optimization: render cache to avoid redundant redraws
+const renderCache = new Map();
+let lastRenderTime = 0;
+const RENDER_THROTTLE = 16; // ~60fps
+
+function throttledRender(renderFn) {
+    return function(...args) {
+        const now = Date.now();
+        if (now - lastRenderTime >= RENDER_THROTTLE) {
+            lastRenderTime = now;
+            return renderFn.apply(this, args);
+        }
+        // Skip this frame, but schedule next
+        requestAnimationFrame(() => throttledRender(renderFn)(...args));
+    };
+}
+
+// Henry's optimization: lazy load agents data
+function lazyLoadAgents(container) {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('loaded');
+                observer.unobserve(entry.target);
+            }
+        });
+    });
+    container.querySelectorAll('.agent-card').forEach(card => observer.observe(card));
+}
+
+
+// Henry's optimization: render cache to avoid redundant redraws
+const renderCache = new Map();
+let lastRenderTime = 0;
+const RENDER_THROTTLE = 16; // ~60fps
+
+function throttledRender(renderFn) {
+    return function(...args) {
+        const now = Date.now();
+        if (now - lastRenderTime >= RENDER_THROTTLE) {
+            lastRenderTime = now;
+            return renderFn.apply(this, args);
+        }
+        // Skip this frame, but schedule next
+        requestAnimationFrame(() => throttledRender(renderFn)(...args));
+    };
+}
+
+// Henry's optimization: lazy load agents data
+function lazyLoadAgents(container) {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('loaded');
+                observer.unobserve(entry.target);
+            }
+        });
+    });
+    container.querySelectorAll('.agent-card').forEach(card => observer.observe(card));
+}
+
+
+// Henry's optimization: render cache to avoid redundant redraws
+const renderCache = new Map();
+let lastRenderTime = 0;
+const RENDER_THROTTLE = 16; // ~60fps
+
+function throttledRender(renderFn) {
+    return function(...args) {
+        const now = Date.now();
+        if (now - lastRenderTime >= RENDER_THROTTLE) {
+            lastRenderTime = now;
+            return renderFn.apply(this, args);
+        }
+        // Skip this frame, but schedule next
+        requestAnimationFrame(() => throttledRender(renderFn)(...args));
+    };
+}
+
+// Henry's optimization: lazy load agents data
+function lazyLoadAgents(container) {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('loaded');
+                observer.unobserve(entry.target);
+            }
+        });
+    });
+    container.querySelectorAll('.agent-card').forEach(card => observer.observe(card));
+}
+
+
+// Henry's optimization: render cache to avoid redundant redraws
+const renderCache = new Map();
+let lastRenderTime = 0;
+const RENDER_THROTTLE = 16; // ~60fps
+
+function throttledRender(renderFn) {
+    return function(...args) {
+        const now = Date.now();
+        if (now - lastRenderTime >= RENDER_THROTTLE) {
+            lastRenderTime = now;
+            return renderFn.apply(this, args);
+        }
+        // Skip this frame, but schedule next
+        requestAnimationFrame(() => throttledRender(renderFn)(...args));
+    };
+}
+
+// Henry's optimization: lazy load agents data
+function lazyLoadAgents(container) {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('loaded');
+                observer.unobserve(entry.target);
+            }
+        });
+    });
+    container.querySelectorAll('.agent-card').forEach(card => observer.observe(card));
+}
+
+
+// Henry's optimization: render cache to avoid redundant redraws
+const renderCache = new Map();
+let lastRenderTime = 0;
+const RENDER_THROTTLE = 16; // ~60fps
+
+function throttledRender(renderFn) {
+    return function(...args) {
+        const now = Date.now();
+        if (now - lastRenderTime >= RENDER_THROTTLE) {
+            lastRenderTime = now;
+            return renderFn.apply(this, args);
+        }
+        // Skip this frame, but schedule next
+        requestAnimationFrame(() => throttledRender(renderFn)(...args));
+    };
+}
+
+// Henry's optimization: lazy load agents data
+function lazyLoadAgents(container) {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('loaded');
+                observer.unobserve(entry.target);
+            }
+        });
+    });
+    container.querySelectorAll('.agent-card').forEach(card => observer.observe(card));
+}
+
+
+// Henry's optimization: render cache to avoid redundant redraws
+const renderCache = new Map();
+let lastRenderTime = 0;
+const RENDER_THROTTLE = 16; // ~60fps
+
+function throttledRender(renderFn) {
+    return function(...args) {
+        const now = Date.now();
+        if (now - lastRenderTime >= RENDER_THROTTLE) {
+            lastRenderTime = now;
+            return renderFn.apply(this, args);
+        }
+        // Skip this frame, but schedule next
+        requestAnimationFrame(() => throttledRender(renderFn)(...args));
+    };
+}
+
+// Henry's optimization: lazy load agents data
+function lazyLoadAgents(container) {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('loaded');
+                observer.unobserve(entry.target);
+            }
+        });
+    });
+    container.querySelectorAll('.agent-card').forEach(card => observer.observe(card));
+}
+
+
+// Henry's optimization: render cache to avoid redundant redraws
+const renderCache = new Map();
+let lastRenderTime = 0;
+const RENDER_THROTTLE = 16; // ~60fps
+
+function throttledRender(renderFn) {
+    return function(...args) {
+        const now = Date.now();
+        if (now - lastRenderTime >= RENDER_THROTTLE) {
+            lastRenderTime = now;
+            return renderFn.apply(this, args);
+        }
+        // Skip this frame, but schedule next
+        requestAnimationFrame(() => throttledRender(renderFn)(...args));
+    };
+}
+
+// Henry's optimization: lazy load agents data
+function lazyLoadAgents(container) {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('loaded');
+                observer.unobserve(entry.target);
+            }
+        });
+    });
+    container.querySelectorAll('.agent-card').forEach(card => observer.observe(card));
+}
+
+
+// Henry's optimization: render cache to avoid redundant redraws
+const renderCache = new Map();
+let lastRenderTime = 0;
+const RENDER_THROTTLE = 16; // ~60fps
+
+function throttledRender(renderFn) {
+    return function(...args) {
+        const now = Date.now();
+        if (now - lastRenderTime >= RENDER_THROTTLE) {
+            lastRenderTime = now;
+            return renderFn.apply(this, args);
+        }
+        // Skip this frame, but schedule next
+        requestAnimationFrame(() => throttledRender(renderFn)(...args));
+    };
+}
+
+// Henry's optimization: lazy load agents data
+function lazyLoadAgents(container) {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('loaded');
+                observer.unobserve(entry.target);
+            }
+        });
+    });
+    container.querySelectorAll('.agent-card').forEach(card => observer.observe(card));
+}
+
 
 // Henry's optimization: render cache to avoid redundant redraws
 const renderCache = new Map();
