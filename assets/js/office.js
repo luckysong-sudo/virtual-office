@@ -941,3 +941,34 @@ function lazyLoadAgents(container) {
     });
     container.querySelectorAll('.agent-card').forEach(card => observer.observe(card));
 }
+
+
+// Henry's optimization: render cache to avoid redundant redraws
+const renderCache = new Map();
+let lastRenderTime = 0;
+const RENDER_THROTTLE = 16; // ~60fps
+
+function throttledRender(renderFn) {
+    return function(...args) {
+        const now = Date.now();
+        if (now - lastRenderTime >= RENDER_THROTTLE) {
+            lastRenderTime = now;
+            return renderFn.apply(this, args);
+        }
+        // Skip this frame, but schedule next
+        requestAnimationFrame(() => throttledRender(renderFn)(...args));
+    };
+}
+
+// Henry's optimization: lazy load agents data
+function lazyLoadAgents(container) {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('loaded');
+                observer.unobserve(entry.target);
+            }
+        });
+    });
+    container.querySelectorAll('.agent-card').forEach(card => observer.observe(card));
+}

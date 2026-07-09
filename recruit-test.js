@@ -204,13 +204,15 @@ function runBrowserTests() {
         allPassed = false;
     }
     
-    // Test 4: Check GitHub connectivity
+    // Test 4: Check GitHub connectivity (without exposing credentials)
     try {
         const remoteUrl = execSync('git remote get-url origin', { cwd: REPO_DIR, encoding: 'utf-8' }).trim();
+        // Sanitize URL to remove credentials
+        const sanitizedUrl = remoteUrl.replace(/:[^@\/]+@/, ':***@');
         results.push({
             test: 'GitHub连接',
             status: '✅ 通过',
-            details: `远程仓库: ${remoteUrl}`
+            details: `远程仓库: ${sanitizedUrl}`
         });
     } catch(e) {
         results.push({

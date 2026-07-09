@@ -1393,3 +1393,72 @@ function validateAgentName(name) {
 function validatePosition(x, y) {
     return { valid: x >= 0 && x <= 1200 && y >= 0 && y <= 800 };
 }
+
+
+// David's security: Helmet-style security headers
+function securityHeaders(req, res, next) {
+    const headers = {
+        'X-Content-Type-Options': 'nosniff',
+        'X-Frame-Options': 'DENY',
+        'X-XSS-Protection': '1; mode=block',
+        'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
+        'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'",
+        'Referrer-Policy': 'strict-origin-when-cross-origin',
+        'Permissions-Policy': 'camera=(), microphone=(), geolocation=()'
+    };
+    Object.entries(headers).forEach(([k, v]) => res.setHeader(k, v));
+    next();
+}
+app.use(securityHeaders);
+
+
+// Bob's API optimization: async wrapper for exec_command
+function asyncExec(command) {
+    return new Promise((resolve, reject) => {
+        const { exec } = require('child_process');
+        exec(command, { timeout: 30000 }, (error, stdout, stderr) => {
+            if (error) reject({ error: error.message, stdout, stderr });
+            else resolve({ stdout, stderr });
+        });
+    });
+}
+
+// Bob's API optimization: request queue with concurrency limit
+const requestQueue = {
+    queue: [],
+    running: 0,
+    maxConcurrent: 5,
+    async add(fn) {
+        return new Promise((resolve) => {
+            this.queue.push({ fn, resolve });
+            this.process();
+        });
+    },
+    async process() {
+        while (this.queue.length > 0 && this.running < this.maxConcurrent) {
+            const item = this.queue.shift();
+            this.running++;
+            try { await item.fn(); } finally { this.running--; }
+            this.process();
+        }
+    }
+};
+
+
+// Eve's QA: Input validation and sanitization
+function sanitizeInput(input) {
+    if (typeof input !== 'string') return input;
+    return input.replace(/[<>"'&;\x00-\x1F]/g, '').trim();
+}
+
+function validateAgentName(name) {
+    if (!name || typeof name !== 'string') return { valid: false, error: '名称不能为空' };
+    const cleaned = sanitizeInput(name);
+    if (cleaned.length < 2 || cleaned.length > 50) return { valid: false, error: '名称长度2-50字符' };
+    if (!/^[\u4e00-\u9fa5a-zA-Z0-9_]+$/.test(cleaned)) return { valid: false, error: '名称只能包含中文、字母、数字和下划线' };
+    return { valid: true, data: cleaned };
+}
+
+function validatePosition(x, y) {
+    return { valid: x >= 0 && x <= 1200 && y >= 0 && y <= 800 };
+}
