@@ -116,8 +116,8 @@
     "last_optimized": "2026-07-09T20:10:47.273Z",
     "optimization_round": 16,
     "parallel_mode": true,
-    "last_hired": "Employee_3",
-    "hire_date": "2026-07-09T20:03:33.613Z"
+    "last_hired": "Employee_4",
+    "hire_date": "2026-07-09T20:13:33.621Z"
   },
   "agents": [
     {
@@ -146,6 +146,15 @@
       "avatar": "👤",
       "x": 200,
       "y": 160
+    },
+    {
+      "name": "Employee_4",
+      "role": "QA Engineer",
+      "department": "Data",
+      "specialty": "Various",
+      "avatar": "👤",
+      "x": 250,
+      "y": 190
     }
   ]
 }
