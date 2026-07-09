@@ -224,3 +224,27 @@ body{font-family:'Noto Sans SC',sans-serif;background:var(--bg);color:var(--text
 
 /* Scrollbar */
 ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+/* Design tokens */
+:root {
+  --accent-primary: #6366f1;
+  --accent-secondary: #8b5cf6;
+  --accent-gradient: linear-gradient(135deg, #6366f1, #8b5cf6);
+  --glass-bg: rgba(255, 255, 255, 0.08);
+  --glass-border: rgba(255, 255, 255, 0.12);
+  --transition-fast: 150ms ease-out;
+  --transition-normal: 300ms ease-out;
+  --ease-out: cubic-bezier(.25,.46,.45,.94);
+}
+
+/* Dark mode */
+.dark-mode {
+  --office-bg: #0f172a;
+  --office-card: #1e293b;
+  --office-text: #e2e8f0;
+}
+
+/* Accessibility */
+html { scroll-behavior: smooth; }
+*:focus-visible { outline: 2px solid var(--accent-primary, #6366f1); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
