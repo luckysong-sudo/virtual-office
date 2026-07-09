@@ -1,5 +1,5 @@
 /**
- * Virtual Office v3 - Complete frontend
+ * Virtual Office v4 - Complete frontend
  */
 const API = './api/index.php';
 const state = {
@@ -86,9 +86,12 @@ async function api(ep, m='GET', b=null) {
 }
 
 async function loadAllData() {
-    const [a, t] = await Promise.all([api('agents'), api('tasks')]);
+    const [a, t, s] = await Promise.all([api('agents'), api('tasks'), api('status')]);
     if (a.success && a.agents) { state.agents = a.agents; renderList(); renderCanvas(); updateStats(); }
     if (t.success && t.tasks) { state.tasks = t.tasks; document.getElementById('task-count').textContent = t.tasks.length; }
+    if (s.success && s.office) {
+        document.getElementById('avg-mood').textContent = s.office.avg_mood || '--';
+    }
 }
 
 // ===== Render =====
@@ -107,7 +110,8 @@ function renderCanvas() {
     state.agents.forEach(a => {
         const d = document.createElement('div'); d.className = 'agent-entity'; d.id = `agent-${a.id}`;
         d.style.left = a.x + 'px'; d.style.top = a.y + 'px';
-        const moodClass = (a.mood_score||50) >= 70 ? 'mood-good' : (a.mood_score||50) >= 40 ? 'mood-ok' : 'mood-bad';
+        const mood = a.mood_score || 50;
+        const moodClass = mood >= 70 ? 'mood-good' : mood >= 40 ? 'mood-ok' : 'mood-bad';
         d.innerHTML = `<div class="agent-body ${a.status}"><div class="mood-ring ${moodClass}"></div>${a.avatar}</div><div class="agent-label">${a.name.split(' ')[0]}</div><div class="agent-task-label">${a.current_task||''}</div>`;
         d.onclick = e => { e.stopPropagation(); selectAgent(a.id); };
         layer.appendChild(d);
@@ -119,6 +123,8 @@ function updateStats() {
     const avg = t ? Math.round(state.agents.reduce((s,a)=>s+(parseFloat(a.productivity)||0),0)/t) : 0;
     document.getElementById('agent-count').textContent = t;
     document.getElementById('avg-productivity').textContent = avg;
+    const avgMood = t ? Math.round(state.agents.reduce((s,a)=>s+(parseFloat(a.mood_score)||50),0)/t) : 0;
+    document.getElementById('avg-mood').textContent = avgMood;
 }
 
 // ===== Select Agent =====
@@ -172,31 +178,70 @@ function switchTab(name) {
 
 // ===== Detail =====
 function renderDetail(a) {
-    const p = parseFloat(a.productivity||0); const mc = (a.mood_score||50);
-    const mColor = mc>=70?'var(--ok)':mc>=40?'var(--warn)':'var(--bad)';
+    const p = parseFloat(a.productivity||0);
+    const mood = a.mood_score || 50;
+    const energy = a.energy || 100;
+    const mColor = mood>=70?'var(--ok)':mood>=40?'var(--warn)':'var(--bad)';
+    const eColor = energy>=70?'var(--ok)':energy>=40?'var(--warn)':'var(--bad)';
     const pColor = p>=85?'var(--ok)':p>=60?'var(--warn)':'var(--bad)';
     const pClass = p>=85?'high':p>=60?'med':'low';
-    document.getElementById('detail-content').innerHTML = `
-        <div class="detail-avatar-large">${a.avatar}</div>
-        <div class="detail-name-large">${a.name}</div>
-        <div class="detail-role-large">${a.role}</div>
-        <div class="detail-section"><h4>基本信息</h4>
-            <div class="detail-row"><span class="label">状态</span><span class="value">${a.status}</span></div>
-            <div class="detail-row"><span class="label">部门</span><span class="value">${a.department}</span></div>
-            <div class="detail-row"><span class="label">位置</span><span class="value">(${Math.round(a.x)}, ${Math.round(a.y)})</span></div>
-        </div>
-        <div class="detail-section"><h4>心情 ${mc>=70?'😊':mc>=40?'😐':'😞'} (${mc}/100)</h4>
-            <div class="mood-bar"><div class="mood-fill" style="width:${mc}%;background:${mColor}"></div></div>
-        </div>
-        <div class="detail-section"><h4>生产力 ${p}%</h4>
-            <div class="progress-bar"><div class="progress-fill ${pClass}" style="width:${p}%"></div></div>
-        </div>
-        <div class="detail-section"><h4>当前任务</h4>
-            <div class="detail-row"><span class="value" style="font-size:.8rem">${a.current_task||'空闲中'}</span></div>
-        </div>
-        <div class="detail-section"><h4>正在交流</h4>
-            <div class="detail-row"><span class="value">${a.talking_to?'与 '+a.talking_to+' 聊天':'无'}</span></div>
-        </div>`;
+    
+    // Load memories
+    api(`memory/${a.id}`).then(d => {
+        let memHtml = '';
+        if (d.memories) {
+            memHtml = '<div class="detail-section"><h4>🧠 记忆</h4>';
+            d.memories.forEach(m => {
+                memHtml += `<div class="memory-item"><div class="memory-topic">${m.topic}</div><div class="memory-content">${m.content}</div><div class="memory-conf">信心: ${m.confidence}%</div></div>`;
+            });
+            memHtml += '</div>';
+        }
+        
+        // Load relationships
+        api('relationships').then(rels => {
+            let relHtml = '';
+            if (rels.relationships) {
+                const myRels = rels.relationships.filter(r => r.agent_a === a.id || r.agent_b === a.id);
+                if (myRels.length) {
+                    relHtml = '<div class="detail-section"><h4>🤝 关系</h4>';
+                    myRels.forEach(r => {
+                        const otherId = r.agent_a === a.id ? r.agent_b : r.agent_a;
+                        const other = state.agents.find(x => x.id === otherId);
+                        const otherName = other ? other.name : otherId;
+                        const relColor = r.strength >= 70 ? 'var(--ok)' : r.strength >= 40 ? 'var(--warn)' : 'var(--dim)';
+                        relHtml += `<div class="relation-item"><span class="rel-avatars">${other ? other.avatar : '👤'}</span><span class="rel-name">${otherName}</span><span class="rel-strength" style="color:${relColor}">${r.strength}%</span></div>`;
+                    });
+                    relHtml += '</div>';
+                }
+            }
+            
+            document.getElementById('detail-content').innerHTML = `
+                <div class="detail-avatar-large">${a.avatar}</div>
+                <div class="detail-name-large">${a.name}</div>
+                <div class="detail-role-large">${a.role}</div>
+                <div class="detail-section"><h4>基本信息</h4>
+                    <div class="detail-row"><span class="label">状态</span><span class="value">${a.status}</span></div>
+                    <div class="detail-row"><span class="label">部门</span><span class="value">${a.department}</span></div>
+                    <div class="detail-row"><span class="label">位置</span><span class="value">(${Math.round(a.x)}, ${Math.round(a.y)})</span></div>
+                </div>
+                <div class="detail-section"><h4>心情 ${mood>=70?'😊':mood>=40?'😐':'😞'} (${mood}/100)</h4>
+                    <div class="mood-bar"><div class="mood-fill" style="width:${mood}%;background:${mColor}"></div></div>
+                </div>
+                <div class="detail-section"><h4>精力 (${energy}/100)</h4>
+                    <div class="energy-bar"><div class="mood-fill" style="width:${energy}%;background:${eColor}"></div></div>
+                </div>
+                <div class="detail-section"><h4>生产力 ${p}%</h4>
+                    <div class="progress-bar"><div class="progress-fill ${pClass}" style="width:${p}%"></div></div>
+                </div>
+                <div class="detail-section"><h4>当前任务</h4>
+                    <div class="detail-row"><span class="value" style="font-size:.8rem">${a.current_task||'空闲中'}</span></div>
+                </div>
+                <div class="detail-section"><h4>正在交流</h4>
+                    <div class="detail-row"><span class="value">${a.talking_to?'与 '+a.talking_to+' 聊天':'无'}</span></div>
+                </div>
+                ${memHtml}${relHtml}`;
+        });
+    });
 }
 
 // ===== Tasks =====
@@ -208,7 +253,7 @@ function renderTasks(agentId) {
         const d = document.createElement('div'); d.className = 'task-item';
         const prioClass = `task-priority-${t.priority}`;
         d.innerHTML = `<div class="task-title">${t.title}</div>
-            <div class="task-meta"><span class="${prioClass}">${t.priority==='critical'?'🔴紧急':t.priority==='high'?'🟠高':t.priority==='medium'?'🔵中':'⚪低'}</span><span>${t.status}</span><span>${t.created_by}</span></div>
+            <div class="task-meta"><span class="${prioClass}">${t.priority==='critical'?'🔴紧急':t.priority==='high'?'🟠高':t.priority==='medium'?'🔵中':'⚪低'}</span><span>${t.status}</span></div>
             <div class="task-progress"><div class="task-progress-fill" style="width:${t.progress||0}%"></div></div>
             <div style="font-size:.7rem;color:var(--dim);margin-top:2px">${t.progress||0}%</div>`;
         list.appendChild(d);
@@ -263,6 +308,12 @@ function updateAgentEl(a) {
     el.style.left=a.x+'px'; el.style.top=a.y+'px';
     const body = el.querySelector('.agent-body'); if(body) body.className='agent-body '+a.status;
     const tl = el.querySelector('.agent-task-label'); if(tl) tl.textContent=a.current_task||'';
+    // Update mood ring
+    const ring = el.querySelector('.mood-ring');
+    if (ring) {
+        const mood = a.mood_score || 50;
+        ring.className = 'mood-ring ' + (mood >= 70 ? 'mood-good' : mood >= 40 ? 'mood-ok' : 'mood-bad');
+    }
 }
 
 function ambientChat() {
@@ -285,21 +336,17 @@ async function sendBossOrder() {
     const d = await api('boss-order','POST',{order});
     if(d.responses) {
         showBossResponses(d.responses, order);
-        // Also show in each agent's chat
         Object.keys(d.responses).forEach(aid => {
             if(!state.conversations[aid]) state.conversations[aid]=[];
             state.conversations[aid].push({type:'system',content:`👑 老板: ${order}`});
             state.conversations[aid].push({type:'agent',content:d.responses[aid]});
         });
-        if(state.selectedAgent && state.conversations[state.selectedAgent]) {
-            renderMessages(state.selectedAgent);
-        }
+        if(state.selectedAgent && state.conversations[state.selectedAgent]) renderMessages(state.selectedAgent);
     }
 }
 
 function showBossResponses(responses, order) {
-    const overlay = document.createElement('div'); overlay.className='modal-overlay';
-    overlay.id='modal-boss-responses';
+    const overlay = document.createElement('div'); overlay.className='modal-overlay'; overlay.id='modal-boss-responses';
     let html='<div class="modal"><h3>👑 全员反应</h3><p style="color:var(--dim);margin-bottom:1rem">老板说: "<em>'+order+'</em>"</p>';
     Object.entries(responses).forEach(([aid, reply]) => {
         const a = state.agents.find(x=>x.id===aid);
@@ -311,12 +358,85 @@ function showBossResponses(responses, order) {
     overlay.onclick = e => { if(e.target===overlay) overlay.remove(); };
 }
 
+// ===== Daily Briefing =====
+async function showBriefing() {
+    closeModal('modal-briefing');
+    const d = await api('daily-briefing');
+    if (!d.success || !d.briefing) return;
+    const b = d.briefing;
+    let html = '<div class="briefing-grid">';
+    html += `<div class="briefing-card"><div class="bc-value">${b.total_agents}</div><div class="bc-label">团队成员</div></div>`;
+    html += `<div class="briefing-card"><div class="bc-value" style="color:var(--ok)">${b.avg_productivity}%</div><div class="bc-label">平均生产力</div></div>`;
+    html += `<div class="briefing-card"><div class="bc-value" style="color:var(--warn)">${b.avg_mood}</div><div class="bc-label">平均心情</div></div>`;
+    html += `<div class="briefing-card"><div class="bc-value" style="color:var(--cyan)">${b.avg_energy}</div><div class="bc-label">平均精力</div></div>`;
+    html += `<div class="briefing-card"><div class="bc-value" style="color:var(--accent)">${b.active_tasks}</div><div class="bc-label">进行中任务</div></div>`;
+    html += `<div class="briefing-card"><div class="bc-value" style="color:var(--ok)">${b.completed_tasks}</div><div class="bc-label">已完成任务</div></div>`;
+    html += '</div>';
+    
+    // Department breakdown
+    html += '<div class="briefing-section"><h4>部门分布</h4><div style="display:flex;gap:.5rem;flex-wrap:wrap">';
+    Object.entries(b.departments||{}).forEach(([dept, count]) => {
+        html += `<span style="background:var(--card);padding:3px 10px;border-radius:10px;font-size:.75rem">${dept}: ${count}</span>`;
+    });
+    html += '</div></div>';
+    
+    // Strongest relationships
+    if (b.strongest_relationships && b.strongest_relationships.length) {
+        html += '<div class="briefing-section"><h4>🤝 最紧密关系</h4>';
+        b.strongest_relationships.forEach(r => {
+            html += `<div class="relation-item"><span class="rel-avatars">${r.avatar_a}${r.avatar_b}</span><span class="rel-name">${r.name_a} ↔ ${r.name_b}</span><span class="rel-strength">${r.strength}%</span></div>`;
+        });
+        html += '</div>';
+    }
+    
+    // Recent events
+    if (b.recent_events && b.recent_events.length) {
+        html += '<div class="briefing-section"><h4>📡 最近动态</h4>';
+        b.recent_events.forEach(ev => {
+            const time = ev.timestamp ? ev.timestamp.slice(11,16) : '';
+            html += `<div style="font-size:.75rem;color:var(--dim);padding:.2rem 0">${time} - ${ev.description||''}</div>`;
+        });
+        html += '</div>';
+    }
+    
+    document.getElementById('briefing-content').innerHTML = html;
+    document.getElementById('modal-briefing').style.display = 'flex';
+}
+
+// ===== Coffee Break =====
+function coffeeBreak() {
+    let count = 0;
+    state.agents.forEach(a => {
+        a.energy = Math.min(100, (a.energy || 50) + 25);
+        a.mood_score = Math.min(100, (a.mood_score || 50) + 10);
+        a.status = 'coffee';
+        count++;
+    });
+    showToast(`☕ 全员喝杯咖啡！精力 +${count * 25}，心情 +${count * 10}`);
+    
+    // Update server
+    state.agents.forEach(a => {
+        api('update','POST',{agent_id:a.id,energy:a.energy,mood_score:a.mood_score,status:a.status});
+    });
+    
+    // Reset after 10s
+    setTimeout(() => {
+        state.agents.forEach(a => {
+            a.status = 'working';
+            const el = document.getElementById(`agent-${a.id}`);
+            if (el) { const body = el.querySelector('.agent-body'); if(body) body.className='agent-body working'; }
+        });
+    }, 10000);
+}
+
 // ===== Listeners =====
 function setupEvents() {
     document.getElementById('chat-send').onclick = sendMessage;
     document.getElementById('chat-input').onkeydown = e => { if(e.key==='Enter') sendMessage(); };
     document.getElementById('btn-new-task').onclick = () => { document.getElementById('modal-task').style.display='flex'; populateAssignees(); };
     document.getElementById('btn-boss').onclick = () => { document.getElementById('modal-boss').style.display='flex'; };
+    document.getElementById('btn-briefing').onclick = showBriefing;
+    document.getElementById('btn-coffee').onclick = coffeeBreak;
     document.getElementById('btn-pause').onclick = () => {
         state.simulationRunning=!state.simulationRunning;
         document.getElementById('btn-pause').textContent=state.simulationRunning?'⏸️':'▶️';
@@ -342,8 +462,8 @@ function closeModal(id) { document.getElementById(id).style.display='none'; }
 function toggleNight() {
     state.nightMode=!state.nightMode;
     document.body.classList.toggle('night-mode',state.nightMode);
-    document.getElementById('btn-night').textContent=state.nightMode?'☀️ 日间':'🌙 夜间';
-    showToast(state.nightMode?'🌙 办公室进入夜间模式':'☀️ 办公室恢复日间模式');
+    document.getElementById('btn-night').textContent=state.nightMode?'☀️':'🌙';
+    showToast(state.nightMode?'🌙 夜间模式':'☀️ 日间模式');
 }
 
 function zoomIn(){state.zoom=Math.min(3,state.zoom+.15);document.getElementById('zoom-level').textContent=Math.round(state.zoom*100)+'%';updateTransform();}

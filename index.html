@@ -22,11 +22,14 @@
             <span class="stat-item">👥 <strong id="agent-count">8</strong></span>
             <span class="stat-item">📋 <strong id="task-count">0</strong></span>
             <span class="stat-item">⚡ <strong id="avg-productivity">--</strong>%</span>
+            <span class="stat-item">😊 <strong id="avg-mood">--</strong></span>
         </div>
         <div class="top-actions">
-            <button id="btn-boss" class="btn btn-warning" title="向全员下达指令">👑 老板模式</button>
+            <button id="btn-briefing" class="btn btn-purple" title="每日简报">📊 简报</button>
+            <button id="btn-boss" class="btn btn-warning" title="向全员下达指令">👑 老板</button>
+            <button id="btn-coffee" class="btn btn-secondary" title="喝咖啡休息">☕ 咖啡</button>
             <button id="btn-new-task" class="btn btn-primary">➕ 任务</button>
-            <button id="btn-night" class="btn btn-secondary" title="切换日夜">🌙 夜间</button>
+            <button id="btn-night" class="btn btn-secondary" title="切换日夜">🌙</button>
             <button id="btn-pause" class="btn btn-secondary">⏸️</button>
         </div>
     </header>
@@ -59,7 +62,7 @@
             <div class="panel-placeholder" id="panel-placeholder">
                 <div class="placeholder-icon">💬</div>
                 <p>点击角色开始对话</p>
-                <p class="hint">或使用 👑 老板模式向全员下令</p>
+                <p class="hint">试试 ☕ 咖啡休息 或 👑 老板模式</p>
             </div>
             <div class="panel-content" id="panel-content" style="display:none;">
                 <div class="panel-tabs">
@@ -108,11 +111,21 @@
     <div class="modal-overlay" id="modal-boss" style="display:none;">
         <div class="modal">
             <h3>👑 老板模式</h3>
-            <p style="color:var(--text-secondary);font-size:0.85rem;margin-bottom:0.75rem;">向全体团队成员下达指令，每个人都会给出自己的反应。</p>
+            <p>向全体团队成员下达指令，每个人都会给出自己的反应。</p>
             <textarea id="boss-order" placeholder="例如：本季度我们要全力冲刺新版本上线！"></textarea>
             <div class="modal-actions">
                 <button class="btn btn-secondary" onclick="closeModal('modal-boss')">取消</button>
                 <button class="btn btn-warning" onclick="sendBossOrder()">📢 全员传达</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modal-briefing" style="display:none;">
+        <div class="modal" style="width:550px">
+            <h3>📊 办公室每日简报</h3>
+            <div id="briefing-content"></div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeModal('modal-briefing')">关闭</button>
             </div>
         </div>
     </div>
