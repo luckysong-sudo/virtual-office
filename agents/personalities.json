@@ -112,9 +112,9 @@
     ]
   },
   "meta": {
-    "version": "2",
-    "last_optimized": "2026-07-09T21:18:52.830Z",
-    "optimization_round": 6,
+    "version": "3",
+    "last_optimized": "2026-07-09T21:24:38.872Z",
+    "optimization_round": 7,
     "self_optimizing": true
   }
 }
