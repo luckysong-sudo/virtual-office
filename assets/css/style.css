@@ -22,6 +22,7 @@ body{font-family:'Noto Sans SC',sans-serif;background:var(--bg);color:var(--text
 .btn-secondary{background:var(--card);color:var(--text)}.btn-secondary:hover{background:var(--border)}
 .btn-warning{background:var(--warn);color:#000}.btn-warning:hover{background:#d97706}
 .btn-purple{background:var(--purple);color:#fff}.btn-purple:hover{background:#9333ea}
+.btn-info{background:var(--cyan);color:#000}.btn-info:hover{background:#0891b2}
 
 /* Main */
 .main-container{display:flex;height:calc(100vh - 56px)}
@@ -166,6 +167,34 @@ body{font-family:'Noto Sans SC',sans-serif;background:var(--bg);color:var(--text
 .night-mode #floor-plan{filter:brightness(.4) saturate(.5)}
 .night-mode::before{content:'';position:fixed;inset:0;background:rgba(0,0,20,.5);pointer-events:none;z-index:1}
 .night-mode .agent-entity{filter:brightness(.7)}
+
+/* Meeting overlay */
+.meeting-overlay{position:absolute;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:15;pointer-events:none}
+.meeting-info{text-align:center;color:#fff}
+.meeting-title{font-size:1.2rem;font-weight:700;display:block;margin-bottom:.5rem}
+.meeting-participants{font-size:.8rem;color:var(--dim)}
+
+/* Timeline */
+.timeline-content{padding:.75rem;overflow-y:auto;flex:1}
+.timeline-item{position:relative;padding-left:20px;margin-bottom:1rem}
+.timeline-item::before{content:'';position:absolute;left:4px;top:4px;width:8px;height:8px;border-radius:50%;background:var(--accent)}
+.timeline-item:not(:last-child)::after{content:'';position:absolute;left:7px;top:14px;bottom:-8px;width:2px;background:var(--border)}
+.timeline-time{font-size:.65rem;color:var(--dim);margin-bottom:2px}
+.timeline-type{font-size:.7rem;color:var(--accent);margin-bottom:2px}
+.timeline-text{font-size:.8rem;color:var(--text);line-height:1.4}
+
+/* Shortcuts */
+.shortcuts-list{max-height:300px;overflow-y:auto}
+.shortcut-row{display:flex;justify-content:space-between;align-items:center;padding:.4rem 0;border-bottom:1px solid var(--border)}
+.shortcut-key{background:var(--card);padding:2px 8px;border-radius:4px;font-size:.8rem;font-weight:600;color:var(--accent);min-width:30px;text-align:center}
+.shortcut-desc{font-size:.8rem;color:var(--dim)}
+
+/* Meeting participant select */
+.meeting-participant-select{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.75rem}
+.mp-check{display:flex;align-items:center;gap:.3rem;padding:.3rem .6rem;border-radius:6px;background:var(--bg);border:1px solid var(--border);cursor:pointer;font-size:.8rem;transition:all .2s}
+.mp-check:hover{border-color:var(--accent)}
+.mp-check.checked{border-color:var(--accent);background:var(--glow)}
+.mp-check input{display:none}
 
 /* Scrollbar */
 ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
