@@ -18,7 +18,7 @@ const TEAM = [
     { id: 'eve', name: 'Eve Liu', role: 'QA Engineer', file: 'server.js', focus: '输入验证和错误处理', desc: '增强输入验证、边界处理、容错', keywords: ['校验', '验证', '边界', '输入', 'sanitize', 'validate'] },
     { id: 'grace', name: 'Grace Wang', role: 'Data Analyst', file: 'api/skills.js', focus: '技能执行引擎优化', desc: '优化技能引擎、数据处理、指标', keywords: ['数据', '分析', 'metric', '指标', '统计'] },
     { id: 'alice', name: 'Alice Zhao', role: 'Product Manager', file: 'index.html', focus: '用户体验和交互优化', desc: '优化用户体验、交互、引导流程', keywords: ['体验', '引导', 'onboarding', '交互', 'UX'] },
-    { id: 'frank', name: 'Frank Huang', role: 'Tech Lead', file: 'agents/personalities.json', focus: '角色配置和系统提示', desc: '优化角色配置、系统提示词', keywords: ['配置', '提示', '系统提示', 'persona', 'role'] },
+    { id: 'frank', name: 'Frank Huang', role: 'Tech Lead', file: 'agents/personalities.json', focus: '角色配置和系统提示', desc: '优化角色配置、系统提示词', keywords: ['配置', '提示', '系统提示', 'persona', 'role', '优化', '更新', 'meta'], alwaysApply: true },
 ];
 
 function log(msg) {
