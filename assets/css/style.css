@@ -1,6 +1,32 @@
 /* ===== Virtual Office v4 ===== */
 *{margin:0;padding:0;box-sizing:border-box}
-:root{--bg:#0f172a;--panel:#1e293b;--card:#334155;--accent:#3b82f6;--glow:rgba(59,130,246,.3);--text:#f1f5f9;--dim:#94a3b8;--border:#475569;--ok:#22c55e;--warn:#f59e0b;--bad:#ef4444;--purple:#a855f7;--cyan:#06b6d4;--night-bg:#0a0e1a}
+:root{
+  --bg:#0f172a;
+  --panel:#1e293b;
+  --card:#334155;
+  --accent:#3b82f6;
+  --glow:rgba(59,130,246,.3);
+  --text:#f1f5f9;
+  --dim:#94a3b8;
+  --border:#475569;
+  --ok:#22c55e;
+  --warn:#f59e0b;
+  --bad:#ef4444;
+  --purple:#a855f7;
+  --cyan:#06b6d4;
+  --night-bg:#0a0e1a;
+  /* Design system variables per Carol's recommendation */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.3s ease;
+  --shadow-card: 0 4px 12px rgba(0,0,0,.4);
+}
 body{font-family:'Noto Sans SC',sans-serif;background:var(--bg);color:var(--text);overflow:hidden;height:100vh}
 
 /* Loading */

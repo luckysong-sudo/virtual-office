@@ -27,6 +27,9 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ===== Canvas =====
+let lastFrameTime = 0;
+const FRAME_INTERVAL = 1000 / 60; // Target 60fps
+
 function initCanvas() {
     const canvas = document.getElementById('floor-plan');
     const ctx = canvas.getContext('2d');
@@ -76,6 +79,52 @@ function updateTransform() {
         el.style.transform = `translate(${state.offsetX}px,${state.offsetY}px) scale(${state.zoom})`;
         el.style.transformOrigin = '0 0';
     });
+}
+
+// ===== Debounce utility per Eve's QA recommendation =====
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+// ===== Keyboard shortcuts per Alice's UX recommendation =====
+function setupKeyboardShortcuts() {
+    document.addEventListener('keydown', e => {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+        switch(e.key.toLowerCase()) {
+            case 'n': document.getElementById('btn-new-task').click(); break;
+            case 'b': document.getElementById('btn-briefing').click(); break;
+            case 'o': document.getElementById('btn-boss').click(); break;
+            case 'c': document.getElementById('btn-coffee').click(); break;
+            case 'm': document.getElementById('btn-meeting').click(); break;
+            case 'e': exportReport(); break;
+            case 'escape': closeAllModals(); break;
+            case 'arrowdown': navigateAgents(1); break;
+            case 'arrowup': navigateAgents(-1); break;
+            case '=': case '+': zoomIn(); break;
+            case '-': zoomOut(); break;
+        }
+    });
+}
+
+function closeAllModals() {
+    document.querySelectorAll('.modal-overlay').forEach(m => m.style.display='none');
+}
+
+function navigateAgents(direction) {
+    const items = document.querySelectorAll('.agent-list-item');
+    if (!items.length) return;
+    const active = document.querySelector('.agent-list-item.active');
+    let idx = Array.from(items).indexOf(active);
+    idx = (idx + direction + items.length) % items.length;
+    items[idx].click();
 }
 
 // ===== Data =====
@@ -443,6 +492,9 @@ function setupEvents() {
         showToast(state.simulationRunning?'🟢 恢复':'⏸️ 暂停');
     };
     document.getElementById('btn-night').onclick = toggleNight;
+    document.getElementById('btn-meeting').onclick = showMeetingModal;
+    document.getElementById('btn-export').onclick = exportReport;
+    document.getElementById('btn-shortcuts').onclick = () => { document.getElementById('modal-shortcuts').style.display='flex'; };
 }
 
 function populateAssignees() {
@@ -469,6 +521,87 @@ function toggleNight() {
 function zoomIn(){state.zoom=Math.min(3,state.zoom+.15);document.getElementById('zoom-level').textContent=Math.round(state.zoom*100)+'%';updateTransform();}
 function zoomOut(){state.zoom=Math.max(.3,state.zoom-.15);document.getElementById('zoom-level').textContent=Math.round(state.zoom*100)+'%';updateTransform();}
 function resetView(){state.zoom=1;state.offsetX=0;state.offsetY=0;document.getElementById('zoom-level').textContent='100%';updateTransform();}
+
+// ===== Export Report per Alice's recommendation =====
+function exportReport() {
+    const agents = state.agents.map(a => `${a.avatar} ${a.name} (${a.role}): 生产力${a.productivity}% | 心情${a.mood_score} | 精力${a.energy}`).join('\n');
+    const report = `🏢 虚拟办公室报告\n📅 ${new Date().toLocaleString()}\n\n=== 团队状态 ===\n${agents}\n\n=== 任务列表 ===\n${state.tasks.map(t => `[- ${t.priority}] ${t.title} (${t.status}, ${t.progress}%)`).join('\n')}`;
+    const blob = new Blob([report], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `office-report-${new Date().toISOString().slice(0,10)}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('📄 报告已导出');
+}
+
+// ===== Meeting Modal =====
+function showMeetingModal() {
+    document.getElementById('modal-meeting').style.display='flex';
+    populateMeetingParticipants();
+}
+
+function populateMeetingParticipants() {
+    const container = document.getElementById('meeting-participant-select');
+    container.innerHTML = '';
+    state.agents.forEach(a => {
+        const label = document.createElement('label');
+        label.className = 'mp-check';
+        label.innerHTML = `<input type="checkbox" value="${a.id}" checked onchange="this.parentElement.classList.toggle('checked', this.checked)"> ${a.avatar} ${a.name}`;
+        container.appendChild(label);
+    });
+}
+
+async function startMeeting() {
+    const checkboxes = document.querySelectorAll('#meeting-participant-select input:checked');
+    const participants = Array.from(checkboxes).map(cb => cb.value);
+    const title = document.getElementById('meeting-title').value.trim() || '临时会议';
+    const topic = document.getElementById('meeting-topic').value.trim();
+    
+    if (!participants.length) { showToast('请至少选择一位参会人'); return; }
+    
+    closeModal('modal-meeting');
+    showToast(`📽️ 会议开始: ${title}`);
+    
+    // Update agent positions to meeting room
+    const meetingRoom = { x: 300, y: 550, target_x: 300, target_y: 550 };
+    participants.forEach(pid => {
+        const agent = state.agents.find(a => a.id === pid);
+        if (agent) {
+            Object.assign(agent, meetingRoom);
+            agent.status = 'meeting';
+            agent.current_task = `参加会议: ${title}`;
+            updateAgentEl(agent);
+        }
+    });
+    
+    // Show meeting overlay
+    const overlay = document.getElementById('meeting-overlay');
+    overlay.style.display = 'flex';
+    overlay.querySelector('.meeting-title').textContent = `📽️ 会议进行中: ${title}`;
+    overlay.querySelector('.meeting-participants').textContent = participants.map(id => {
+        const a = state.agents.find(x => x.id === id);
+        return a ? `${a.avatar} ${a.name.split(' ')[0]}` : id;
+    }).join(' • ');
+    
+    // Auto-end meeting after 30 seconds
+    setTimeout(() => {
+        overlay.style.display = 'none';
+        participants.forEach(pid => {
+            const agent = state.agents.find(a => a.id === pid);
+            if (agent) {
+                agent.status = 'working';
+                agent.current_task = '会议结束，返回工作';
+                // Return to random room
+                const r = OFFICE.rooms[Math.floor(Math.random()*OFFICE.rooms.length)];
+                agent.target_x = r.x + 40 + Math.random()*(r.w-80);
+                agent.target_y = r.y + 40 + Math.random()*(r.h-80);
+            }
+        });
+        showToast('✅ 会议结束');
+    }, 30000);
+}
 
 function showToast(msg) {
     const t=document.getElementById('toast'); t.textContent=msg; t.style.display='block';

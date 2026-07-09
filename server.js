@@ -50,11 +50,25 @@ function loadEnv() {
 }
 loadEnv();
 
-// CORS headers
+// CORS headers - tightened per David's security recommendation
 function setCORSHeaders(res) {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    // Allow specific origins only in production
+    const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:9092'];
+    const origin = req.headers.origin;
+    if (allowedOrigins.includes(origin)) {
+        res.setHeader('Access-Control-Allow-Origin', origin);
+    }
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.setHeader('Access-Control-Max-Age', '86400'); // 24 hours
+}
+
+// Input validation per Eve's QA recommendation
+function validateInput(data, requiredFields) {
+    for (const field of requiredFields) {
+        if (!data[field]) return { valid: false, error: `Missing required field: ${field}` };
+    }
+    return { valid: true };
 }
 
 // Simple in-memory store (since PHP isn't available)
@@ -67,6 +81,8 @@ const store = {
     memories: [],
     meetings: [],
     nextId: 1,
+    // Connection pool simulation per Grace's suggestion
+    pools: {},
 };
 
 function seedStore() {
@@ -188,6 +204,15 @@ async function handleApi(req, res, parsedUrl) {
         });
     }
     const data = body ? JSON.parse(body) : {};
+    
+    // Input validation per Eve's recommendation
+    const validation = validateInput(data, ['agent_id', 'message']);
+    if (action === 'chat' && !validation.valid) {
+        response = { success: false, error: validation.error };
+        res.writeHead(400);
+        res.end(JSON.stringify(response));
+        return;
+    }
     
     const response = { success: true, timestamp: new Date().toISOString() };
     
