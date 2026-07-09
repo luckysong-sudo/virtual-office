@@ -689,3 +689,17 @@ function securityHeaders(req, res, next) {
     res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
     next();
 }
+
+// Enhanced input sanitization per Eve's QA recommendation
+function sanitizeInput(input) {
+    if (typeof input !== 'string') return input;
+    return input.replace(/[<>"'&;]/g, '').trim();
+}
+
+function validateRequest(data, schema) {
+    for (const [key, type] of Object.entries(schema)) {
+        if (data[key] === undefined) return { valid: false, error: `缺少字段: ${key}` };
+        if (typeof data[key] !== type) return { valid: false, error: `字段 ${key} 类型错误` };
+    }
+    return { valid: true };
+}
