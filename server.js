@@ -51,9 +51,9 @@ function loadEnv() {
 loadEnv();
 
 // CORS headers - tightened per David's security recommendation
-function setCORSHeaders(res) {
+function setCORSHeaders(req, res) {
     // Allow specific origins only in production
-    const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:9092'];
+    const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:9093'];
     const origin = req.headers.origin;
     if (allowedOrigins.includes(origin)) {
         res.setHeader('Access-Control-Allow-Origin', origin);
@@ -185,7 +185,7 @@ async function callAgnes(agent, personality, message, tempOverride) {
 
 // Handle API requests
 async function handleApi(req, res, parsedUrl) {
-    setCORSHeaders(res);
+    setCORSHeaders(req, res);
     res.setHeader('Content-Type', 'application/json');
     
     if (req.method === 'OPTIONS') { res.writeHead(200); res.end(); return; }
