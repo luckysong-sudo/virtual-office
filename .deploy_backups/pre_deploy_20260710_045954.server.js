@@ -462,20 +462,7 @@ async function handleApi(req, res, parsedUrl) {
                 break;
             }
                 
-            
-            case 'metrics':
-                response.metrics = {
-                    uptime: process.uptime(),
-                    memory: process.memoryUsage(),
-                    cpu: process.cpuUsage(),
-                    agentsOnline: store.agents.length,
-                    totalConversations: store.conversations.length,
-                    totalEvents: store.events.length,
-                };
-                break;
-                
             case 'meetings':
-
                 if (req.method === 'POST') {
                     const meeting = {
                         id: store.nextId++,
