@@ -185,57 +185,16 @@ async function callAgnes(agent, personality, message, tempOverride) {
 
 // Handle API requests
 async function handleApi(req, res, parsedUrl) {
-// Rate limiting middleware
-var rateLimitMap = {};
-var RATE_LIMIT_WINDOW = 60000;
-var RATE_LIMIT_MAX = 100;
-
-function rateLimiter(req, res, next) {
-    var ip = req.socket.remoteAddress;
-    var now = Date.now();
-    if (!rateLimitMap[ip]) rateLimitMap[ip] = { count: 0, window: now };
-    var rec = rateLimitMap[ip];
-    if (now - rec.window > RATE_LIMIT_WINDOW) { rec.count = 0; rec.window = now; }
-    rec.count++;
-    if (rec.count > RATE_LIMIT_MAX) {
-        res.writeHead(429, {"Content-Type": "application/json"});
-        res.end(JSON.stringify({"success":false,"error": "Rate limit exceeded"}));
-        return;
-    }
-    next();
-}
-
     setCORSHeaders(req, res);
     res.setHeader('Content-Type', 'application/json');
-res.setHeader('X-Content-Type-Options', 'nosniff');
-    res.setHeader('X-Frame-Options', 'SAMEORIGIN');
-    res.setHeader('X-XSS-Protection', '1; mode=block');
-    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
     
     if (req.method === 'OPTIONS') { res.writeHead(200); res.end(); return; }
     
     const query = parsedUrl.query || {};
     const endpoint = query.endpoint || '';
     const params = endpoint.split('/');
-    // Endpoint whitelist validation
-var ALLOWED_ENDPOINTS = ["agents","relationships","memory","move","status","events","tasks","task-progress","boss-order","chat","agent-chat","update","personality","daily-briefing","timeline","meetings","export","learn","logs","health","metrics"];
-
-function validateEndpoint(ep) {
-    var parts = ep.split("/");
-    var action = parts[0];
-    if (ALLOWED_ENDPOINTS.indexOf(action) === -1) {
-        return { valid: false, error: "Unknown endpoint: " + action };
-    }
-    return { valid: true, action: action, id: parts[1] };
-}
-
-var epValidation = validateEndpoint(endpoint);
-if (!epValidation.valid) {
-    return { success: false, error: epValidation.error, allowedEndpoints: ALLOWED_ENDPOINTS };
-}
-const action = epValidation.action;
-const id = epValidation.id;
-
+    const action = params[0];
+    const id = params[1];
     
     let body = '';
     if (req.method === 'POST' || req.method === 'PUT') {
@@ -503,20 +462,7 @@ const id = epValidation.id;
                 break;
             }
                 
-            
-            case 'metrics':
-                response.metrics = {
-                    uptime: process.uptime(),
-                    memory: process.memoryUsage(),
-                    cpu: process.cpuUsage(),
-                    agentsOnline: store.agents.length,
-                    totalConversations: store.conversations.length,
-                    totalEvents: store.events.length,
-                };
-                break;
-                
             case 'meetings':
-
                 if (req.method === 'POST') {
                     const meeting = {
                         id: store.nextId++,
@@ -567,14 +513,7 @@ const id = epValidation.id;
                 break;
             }
                 
-            
-            case 'logs':
-                response.logs = requestLog.slice(-50);
-                response.totalLogs = requestLog.length;
-                break;
-                
             case 'learn':
-
                 if (data.agent_id && data.topic && data.content) {
                     const existing = store.memories.findIndex(m => m.agent_id === data.agent_id && m.topic === data.topic);
                     if (existing >= 0) {
@@ -644,80 +583,9 @@ const server = http.createServer((req, res) => {
     }
 });
 
-
-// Request logging
-var requestLog = [];
-function requestLogger(req, res, next) {
-    var start = Date.now();
-    res.on("finish", function() {
-        var entry = { method: req.method, path: req.url, status: res.statusCode, duration: Date.now()-start };
-        requestLog.push(entry);
-        if (requestLog.length > 1000) requestLog.shift();
-        console.log(entry.method + " " + req.url + " - " + entry.duration + "ms");
-    });
-    next();
-}
-
 server.listen(PORT, '0.0.0.0', () => {
     console.log(`🏢 Virtual Office running at http://localhost:${PORT}`);
     console.log(`🤖 Agnes AI API: ${process.env.AGNES_API_URL || 'https://apihub.agnes-ai.com/v1'}`);
     console.log(`👥 Agents: ${store.agents.length} loaded`);
     console.log(`🔑 API Keys configured: ${Object.keys(process.env).filter(k => k.startsWith('AGNES_KEY_')).length} per-agent keys`);
-});
-
-// Global error handling
-process.on("uncaughtException", function(err) {
-    console.error("[UNCAUGHT]", err.message);
-});
-
-process.on("unhandledRejection", function(reason) {
-    console.error("[UNHANDLED REJECTION]", reason);
-});
-
-process.on("SIGTERM", function() {
-    console.log("Received SIGTERM, shutting down...");
-    server.close(function() { process.exit(0); });
-});
-
-process.on("SIGINT", function() {
-    console.log("Received SIGINT, shutting down...");
-    server.close(function() { process.exit(0); });
-});
-
-// Global error handling
-process.on("uncaughtException", function(err) {
-    console.error("[UNCAUGHT]", err.message);
-});
-
-process.on("unhandledRejection", function(reason) {
-    console.error("[UNHANDLED REJECTION]", reason);
-});
-
-process.on("SIGTERM", function() {
-    console.log("Received SIGTERM, shutting down...");
-    server.close(function() { process.exit(0); });
-});
-
-process.on("SIGINT", function() {
-    console.log("Received SIGINT, shutting down...");
-    server.close(function() { process.exit(0); });
-});
-
-// Global error handling
-process.on("uncaughtException", function(err) {
-    console.error("[UNCAUGHT]", err.message);
-});
-
-process.on("unhandledRejection", function(reason) {
-    console.error("[UNHANDLED REJECTION]", reason);
-});
-
-process.on("SIGTERM", function() {
-    console.log("Received SIGTERM, shutting down...");
-    server.close(function() { process.exit(0); });
-});
-
-process.on("SIGINT", function() {
-    console.log("Received SIGINT, shutting down...");
-    server.close(function() { process.exit(0); });
 });
