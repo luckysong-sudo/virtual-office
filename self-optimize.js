@@ -1,5 +1,5 @@
 /**
- * Virtual Office - 持续性自我优化系统 v3.0
+ * Virtual Office - 持续性自我优化系统 v3.1
  * 核心理念: 项目持续进化，不是回退到旧版本
  * 流程: 审查 -> 安全修改 -> 语法验证 -> 提交 -> 重启 -> 健康检查
  */
@@ -37,9 +37,14 @@ function saveVersion(changes) {
 
 function callAgnes(agentId, message) {
     return new Promise((resolve) => {
+        const timeout = setTimeout(() => {
+            if (req.writableEnded === false) req.destroy();
+            resolve({ reply: 'API超时 (30s)', agent: null });
+        }, 30000);
         const postData = JSON.stringify({ agent_id: agentId, message });
         const options = { hostname: 'localhost', port: PORT, path: '/?endpoint=chat', method: 'POST', headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(postData) } };
         const req = http.request(options, (res) => {
+            clearTimeout(timeout);
             let data = '';
             res.on('data', chunk => data += chunk);
             res.on('end', () => {
@@ -47,8 +52,7 @@ function callAgnes(agentId, message) {
                 catch(e) { resolve({ reply: data.substring(0, 2000), agent: null }); }
             });
         });
-        req.on('error', (e) => resolve({ reply: 'API错误: ' + e.message, agent: null }));
-        req.setTimeout(30000, () => { req.destroy(); resolve({ reply: '请求超时', agent: null }); });
+        req.on('error', (e) => { clearTimeout(timeout); resolve({ reply: 'API错误: ' + e.message, agent: null }); });
         req.write(postData);
         req.end();
     });
@@ -72,13 +76,14 @@ function safeModifyFile(filePath, modifierFn) {
 
 function checkHealth() {
     return new Promise((resolve) => {
+        const timeout = setTimeout(() => { req.destroy(); resolve(false); }, 10000);
         const req = http.get('http://localhost:' + PORT + '/?endpoint=status', (res) => {
+            clearTimeout(timeout);
             let data = '';
             res.on('data', chunk => data += chunk);
             res.on('end', () => { try { resolve(JSON.parse(data).success && JSON.parse(data).office); } catch(e) { resolve(false); } });
         });
-        req.on('error', () => resolve(false));
-        req.setTimeout(10000, () => { req.destroy(); resolve(false); });
+        req.on('error', () => { clearTimeout(timeout); resolve(false); });
     });
 }
 
@@ -105,7 +110,7 @@ function waitForServer(maxWait) {
 }
 
 // ============================
-// 优化策略 - 使用独立注入文件避免转义问题
+// 优化策略
 // ============================
 
 const OPTIMIZERS = {
@@ -113,12 +118,10 @@ const OPTIMIZERS = {
         name: 'Bob Wang', role: 'Senior Developer', focus: 'API路由效率和错误处理', files: ['server.js'],
         optimize: function(code, round) {
             var changes = [];
-            var inj = function(file, marker) {
-                return fs.readFileSync(path.join(INJECTIONS_DIR, file), 'utf-8');
-            };
+            var inj = function(file) { return fs.readFileSync(path.join(INJECTIONS_DIR, file), 'utf-8'); };
             
             if (code.indexOf('rateLimitMap') === -1) {
-                changes.push({ desc: 'API请求速率限制中间件', fn: function(src) { return src.replace('// Handle API requests', inj('rate-limiter.js') + '\n\n' + src.split('// Handle API requests')[1] || src); } });
+                changes.push({ desc: 'API请求速率限制中间件', fn: function(src) { return src.replace('// Handle API requests', inj('rate-limiter.js') + '\n\n' + (src.split('// Handle API requests')[1] || '')); } });
             }
             if (code.indexOf('process.on("uncaughtException")') === -1) {
                 changes.push({ desc: '全局错误处理和优雅退出', fn: function(src) { return src + inj('global-errors.js'); } });
@@ -176,7 +179,6 @@ const OPTIMIZERS = {
             if (code.indexOf('ALLOWED_ENDPOINTS') === -1) {
                 changes.push({ desc: 'API端点白名单验证', fn: function(src) {
                     var inj = fs.readFileSync(path.join(INJECTIONS_DIR, 'endpoint-whitelist.js'), 'utf-8');
-                    // Insert after endpoint parsing but before action/id extraction
                     return src.replace('const action = params[0];\n    const id = params[1];', inj);
                 }});
             }
@@ -265,7 +267,7 @@ async function runOptimizationRound() {
         
         var currentCode = fs.readFileSync(fullPath, 'utf-8');
         
-        // 获取agent建议
+        // 获取agent建议（带超时保护）
         try {
             var prompt = '你是' + optimizer.name + '（' + optimizer.role + '），专注于' + optimizer.focus + '。当前文件: ' + filePath + ' (' + currentCode.split('\n').length + '行)。请审查代码并提出改进建议。用中文回答，100字以内。';
             var response = await callAgnes(agentId, prompt);
@@ -317,18 +319,28 @@ async function runOptimizationRound() {
                 log('  ↩️ 已回退到上一版本');
             } catch(e) { log('  ⚠️ 回退失败'); }
         }
+    } else {
+        log('  ⏭️ 本轮无新改进，跳过重启');
     }
     
     log('  📈 总计: ' + versionData.rounds + ' 轮优化, ' + versionData.changes.length + ' 个改进已部署');
 }
 
-log('🏢 虚拟办公室 - 持续性自我优化系统 v3.0');
+log('🏢 虚拟办公室 - 持续性自我优化系统 v3.1');
 log('📅 启动时间: ' + new Date().toISOString());
-log('📊 初始版本: v' + versionData.version + ', 历史优化: ' + versionData.rounds + ' 轮');
+log('📊 当前版本: v' + versionData.version + ', 历史优化: ' + versionData.rounds + ' 轮');
 log('🔧 每个角色持续改进代码，项目不断进化');
 log('');
 
+// 立即执行一轮，之后每 5 分钟一轮
 (async function() {
-    await runOptimizationRound();
-    setInterval(async function() { await runOptimizationRound(); }, 5 * 60 * 1000);
+    try {
+        await runOptimizationRound();
+        setInterval(async function() {
+            try { await runOptimizationRound(); }
+            catch(e) { log('  ❌ 优化循环异常: ' + e.message); }
+        }, 5 * 60 * 1000);
+    } catch(e) {
+        log('  ❌ 初始化失败: ' + e.message);
+    }
 })();
