@@ -17,7 +17,7 @@ const TEAM = [
     { id: 'david', name: 'David Zhang', role: 'DevOps Engineer', file: 'server.js', focus: '安全加固和CORS配置', desc: '加强服务器安全、CORS、HTTPS', keywords: ['安全', 'CORS', 'HTTPS', '头', 'header', '防护'] },
     { id: 'eve', name: 'Eve Liu', role: 'QA Engineer', file: 'server.js', focus: '输入验证和错误处理', desc: '增强输入验证、边界处理、容错', keywords: ['校验', '验证', '边界', '输入', 'sanitize', 'validate'] },
     { id: 'grace', name: 'Grace Wang', role: 'Data Analyst', file: 'api/skills.js', focus: '技能执行引擎优化', desc: '优化技能引擎、数据处理、指标', keywords: ['数据', '分析', 'metric', '指标', '统计'] },
-    { id: 'alice', name: 'Alice Zhao', role: 'Product Manager', file: 'index.html', focus: '用户体验和交互优化', desc: '优化用户体验、交互、引导流程', keywords: ['体验', '引导', 'onboarding', '交互', 'UX', '欢迎', '新手'], alwaysApply: true },
+    { id: 'alice', name: 'Alice Zhao', role: 'Product Manager', file: 'index.html', focus: '用户体验和交互优化', desc: '优化用户体验、交互、引导流程', keywords: ['体验', '引导', 'onboarding', '交互', 'UX', '欢迎', '新手'], alwaysApply: true, extraTask: 'readme' },
     { id: 'frank', name: 'Frank Huang', role: 'Tech Lead', file: 'agents/personalities.json', focus: '角色配置和系统提示', desc: '优化角色配置、系统提示词', keywords: ['配置', '提示', '系统提示', 'persona', 'role', '优化', '更新', 'meta'], alwaysApply: true },
 ];
 
@@ -270,6 +270,47 @@ if (!localStorage.getItem('onboarding-seen')) {
 </script>`,
                 desc: '新手引导系统'
             });
+            
+            // Alice also updates README.md with project status
+            try {
+                const { execSync } = require('child_process');
+                const logResult = execSync('git log --oneline -5', { encoding: 'utf-8' });
+                const statsResult = execSync('git diff --stat HEAD~3 HEAD', { encoding: 'utf-8' });
+                const readmePath = path.join(REPO_DIR, 'README.md');
+                let readme = '';
+                if (fs.existsSync(readmePath)) {
+                    readme = fs.readFileSync(readmePath, 'utf-8');
+                }
+                
+                // Update the Last Updated section
+                const updatedSection = `
+## 📊 项目状态
+
+- **最后更新**: ${new Date().toISOString()}
+- **最近提交**:
+\`\`\`
+${logResult.trim().split('\n').map(l => '  ' + l).join('\n')}
+\`\`\`
+- **最近变更统计**:
+\`\`\`
+${statsResult.trim().split('\n').map(l => '  ' + l).join('\n')}
+\`\`\`
+- **当前在线**: ${TEAM.map(a => `${a.name}(${a.role})`).join(', ')}
+- **优化轮次**: 每5分钟一轮并行优化
+- **GitHub**: https://github.com/luckysong-sudo/virtual-office
+`;
+                // Remove old status section if exists, append new one
+                readme = readme.replace(/## 📊 项目状态\n[\s\S]*/g, '');
+                readme += updatedSection;
+                fs.writeFileSync(readmePath, readme);
+                changes.push({
+                    file: 'README.md',
+                    content: '',
+                    desc: 'README项目状态实时更新'
+                });
+            } catch(e) {
+                log(`  ⚠️ ${agentId} 更新 README 失败: ${e.message.substring(0, 100)}`);
+            }
             break;
         }
         case 'frank': {

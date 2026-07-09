@@ -324,3 +324,25 @@ body{font-family:'Noto Sans SC',sans-serif;background:var(--bg);color:var(--text
     --border: rgba(255, 255, 255, 0.1);
   }
 }
+
+
+/* Carol's design system: additional theme tokens */
+:root {
+  --accent-primary: #6366f1;
+  --accent-secondary: #8b5cf6;
+  --accent-gradient: linear-gradient(135deg, #6366f1, #8b5cf6);
+  --glass-bg: rgba(255, 255, 255, 0.08);
+  --glass-border: rgba(255, 255, 255, 0.12);
+  --transition-fast: 150ms var(--ease-out);
+  --transition-normal: 300ms var(--ease-out);
+}
+
+/* Carol's design system: dark mode support */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1a1a2e;
+    --text: #e0e0e0;
+    --card-bg: rgba(30, 30, 60, 0.8);
+    --border: rgba(255, 255, 255, 0.1);
+  }
+}
