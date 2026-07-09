@@ -1,7 +1,7 @@
 /**
- * Virtual Office - 持续性自我优化系统 v3.1
+ * Virtual Office - 持续性自我优化系统 v3.2
  * 核心理念: 项目持续进化，不是回退到旧版本
- * 流程: 审查 -> 安全修改 -> 语法验证 -> 提交 -> 重启 -> 健康检查
+ * 修复: 每个优化器独立安全边界，单个失败不影响其他
  */
 
 const http = require('http');
@@ -37,10 +37,7 @@ function saveVersion(changes) {
 
 function callAgnes(agentId, message) {
     return new Promise((resolve) => {
-        const timeout = setTimeout(() => {
-            if (req.writableEnded === false) req.destroy();
-            resolve({ reply: 'API超时 (30s)', agent: null });
-        }, 30000);
+        const timeout = setTimeout(() => { resolve({ reply: 'API超时', agent: null }); }, 30000);
         const postData = JSON.stringify({ agent_id: agentId, message });
         const options = { hostname: 'localhost', port: PORT, path: '/?endpoint=chat', method: 'POST', headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(postData) } };
         const req = http.request(options, (res) => {
@@ -58,6 +55,7 @@ function callAgnes(agentId, message) {
     });
 }
 
+// 安全修改文件：先写临时文件，验证通过后替换
 function safeModifyFile(filePath, modifierFn) {
     const fullPath = path.join(REPO_DIR, filePath);
     if (!fs.existsSync(fullPath)) return { success: false, error: 'file_not_found' };
@@ -65,18 +63,30 @@ function safeModifyFile(filePath, modifierFn) {
         const original = fs.readFileSync(fullPath, 'utf-8');
         const modified = modifierFn(original);
         if (modified === original) return { success: false, error: 'no_changes' };
-        fs.writeFileSync(fullPath, modified);
+        
+        // 写入临时文件验证
+        const tmpDir = path.join(REPO_DIR, '.tmp_check');
+        if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, { recursive: true });
+        const tmpPath = path.join(tmpDir, 'check_' + Date.now() + '.js');
+        fs.writeFileSync(tmpPath, modified);
+        
         if (filePath.endsWith('.js')) {
-            try { execSync('node --check "' + fullPath + '"', { cwd: REPO_DIR, timeout: 5000 }); }
-            catch(e) { fs.writeFileSync(fullPath, original); return { success: false, error: 'syntax_error: ' + e.message.substring(0, 200) }; }
+            try { execSync('node --check "' + tmpPath + '"', { cwd: REPO_DIR, timeout: 5000 }); }
+            catch(e) {
+                fs.unlinkSync(tmpPath);
+                return { success: false, error: 'syntax_error: ' + e.message.substring(0, 200) };
+            }
         }
+        
+        // 验证通过，替换原文件
+        fs.renameSync(tmpPath, fullPath);
         return { success: true, origLines: original.split('\n').length, modLines: modified.split('\n').length };
     } catch(e) { return { success: false, error: e.message }; }
 }
 
 function checkHealth() {
     return new Promise((resolve) => {
-        const timeout = setTimeout(() => { req.destroy(); resolve(false); }, 10000);
+        const timeout = setTimeout(() => { resolve(false); }, 10000);
         const req = http.get('http://localhost:' + PORT + '/?endpoint=status', (res) => {
             clearTimeout(timeout);
             let data = '';
@@ -110,7 +120,7 @@ function waitForServer(maxWait) {
 }
 
 // ============================
-// 优化策略
+// 优化策略 — 每个都检查是否已存在
 // ============================
 
 const OPTIMIZERS = {
@@ -118,20 +128,36 @@ const OPTIMIZERS = {
         name: 'Bob Wang', role: 'Senior Developer', focus: 'API路由效率和错误处理', files: ['server.js'],
         optimize: function(code, round) {
             var changes = [];
-            var inj = function(file) { return fs.readFileSync(path.join(INJECTIONS_DIR, file), 'utf-8'); };
             
+            // 速率限制 — 只在不存在时添加
             if (code.indexOf('rateLimitMap') === -1) {
-                changes.push({ desc: 'API请求速率限制中间件', fn: function(src) { return src.replace('// Handle API requests', inj('rate-limiter.js') + '\n\n' + (src.split('// Handle API requests')[1] || '')); } });
+                changes.push({ desc: 'API请求速率限制中间件', fn: function(src) {
+                    // 在 handleApi 函数开头插入
+                    var injection = fs.readFileSync(path.join(INJECTIONS_DIR, 'rate-limiter.js'), 'utf-8');
+                    // 找第一个路由 case 语句前插入
+                    return src.replace("async function handleApi(req, res, parsedUrl) {", "async function handleApi(req, res, parsedUrl) {\n" + injection);
+                }});
             }
+            
+            // 全局错误处理 — 追加到文件末尾
             if (code.indexOf('process.on("uncaughtException")') === -1) {
-                changes.push({ desc: '全局错误处理和优雅退出', fn: function(src) { return src + inj('global-errors.js'); } });
+                changes.push({ desc: '全局错误处理和优雅退出', fn: function(src) { return src + fs.readFileSync(path.join(INJECTIONS_DIR, 'global-errors.js'), 'utf-8'); } });
             }
-            if (code.indexOf('requestLogger') === -1) {
-                changes.push({ desc: '请求日志和性能追踪', fn: function(src) { return src.replace('server.listen(PORT', inj('request-logger.js') + '\n\nserver.listen(PORT'); } });
+            
+            // 请求日志 — 在 server.listen 前插入
+            if (code.indexOf('requestLog = []') === -1) {
+                changes.push({ desc: '请求日志和性能追踪', fn: function(src) {
+                    return src.replace("server.listen(PORT", fs.readFileSync(path.join(INJECTIONS_DIR, 'request-logger.js'), 'utf-8') + "\nserver.listen(PORT");
+                }});
             }
+            
+            // 日志查询API
             if (code.indexOf("case 'logs'") === -1) {
-                changes.push({ desc: '请求日志查询API', fn: function(src) { return src.replace("case 'learn':", inj('logs-api.js')); } });
+                changes.push({ desc: '请求日志查询API', fn: function(src) {
+                    return src.replace("case 'learn':", fs.readFileSync(path.join(INJECTIONS_DIR, 'logs-api.js'), 'utf-8'));
+                }});
             }
+            
             return changes;
         }
     },
@@ -166,7 +192,9 @@ const OPTIMIZERS = {
         optimize: function(code, round) {
             var changes = [];
             if (code.indexOf('X-Content-Type-Options') === -1) {
-                changes.push({ desc: '安全响应头', fn: function(src) { return src.replace("res.setHeader('Content-Type', 'application/json');", "res.setHeader('Content-Type', 'application/json');\n" + fs.readFileSync(path.join(INJECTIONS_DIR, 'security-headers.js'), 'utf-8').trim()); } });
+                changes.push({ desc: '安全响应头', fn: function(src) {
+                    return src.replace("res.setHeader('Content-Type', 'application/json');", "res.setHeader('Content-Type', 'application/json');\n" + fs.readFileSync(path.join(INJECTIONS_DIR, 'security-headers.js'), 'utf-8').trim());
+                }});
             }
             return changes;
         }
@@ -176,10 +204,12 @@ const OPTIMIZERS = {
         name: 'Eve Liu', role: 'QA Engineer', focus: '输入验证和错误处理', files: ['server.js'],
         optimize: function(code, round) {
             var changes = [];
+            // Eve 需要更精确的匹配 — 在 endpoint 解析后立即插入
             if (code.indexOf('ALLOWED_ENDPOINTS') === -1) {
                 changes.push({ desc: 'API端点白名单验证', fn: function(src) {
                     var inj = fs.readFileSync(path.join(INJECTIONS_DIR, 'endpoint-whitelist.js'), 'utf-8');
-                    return src.replace('const action = params[0];\n    const id = params[1];', inj);
+                    // 匹配实际代码中的 endpoint 解析部分
+                    return src.replace("const action = params[0];\n    const id = params[1];", inj);
                 }});
             }
             return changes;
@@ -191,7 +221,9 @@ const OPTIMIZERS = {
         optimize: function(code, round) {
             var changes = [];
             if (code.indexOf("case 'metrics'") === -1) {
-                changes.push({ desc: '性能指标API端点', fn: function(src) { return src.replace("case 'meetings':", fs.readFileSync(path.join(INJECTIONS_DIR, 'metrics-api.js'), 'utf-8')); } });
+                changes.push({ desc: '性能指标API端点', fn: function(src) {
+                    return src.replace("case 'meetings':", fs.readFileSync(path.join(INJECTIONS_DIR, 'metrics-api.js'), 'utf-8'));
+                }});
             }
             return changes;
         }
@@ -237,6 +269,7 @@ async function runOptimizationRound() {
     log('');
     log('=== 自我优化第 ' + roundNum + ' 轮 (版本 v' + versionData.version + ') ===');
     
+    // 确保服务器运行
     var serverRunning = await checkHealth();
     if (!serverRunning) {
         log('服务器未运行，尝试启动...');
@@ -246,7 +279,7 @@ async function runOptimizationRound() {
     }
     
     var appliedChanges = [];
-    var skippedChanges = [];
+    var failedChanges = [];
     var agentIds = ['bob', 'henry', 'carol', 'david', 'eve', 'grace', 'alice', 'frank'];
     
     for (var idx = 0; idx < agentIds.length; idx++) {
@@ -261,13 +294,12 @@ async function runOptimizationRound() {
         var fullPath = path.join(REPO_DIR, filePath);
         if (!fs.existsSync(fullPath)) {
             log('  [SKIP] 文件不存在: ' + filePath);
-            skippedChanges.push({ agent: optimizer.name, reason: 'file_not_found' });
             continue;
         }
         
         var currentCode = fs.readFileSync(fullPath, 'utf-8');
         
-        // 获取agent建议（带超时保护）
+        // 获取agent建议
         try {
             var prompt = '你是' + optimizer.name + '（' + optimizer.role + '），专注于' + optimizer.focus + '。当前文件: ' + filePath + ' (' + currentCode.split('\n').length + '行)。请审查代码并提出改进建议。用中文回答，100字以内。';
             var response = await callAgnes(agentId, prompt);
@@ -289,14 +321,16 @@ async function runOptimizationRound() {
                 log('  ⏭️ 跳过: ' + change.desc + ' (已存在)');
             } else {
                 log('  ❌ 失败: ' + change.desc + ' - ' + result.error.substring(0, 100));
+                failedChanges.push({ agent: optimizer.name, desc: change.desc, error: result.error });
             }
         }
     }
     
     log('');
-    log('  📊 本轮结果: ' + appliedChanges.length + ' 个改进已应用, ' + skippedChanges.length + ' 个跳过');
+    log('  📊 本轮结果: ' + appliedChanges.length + ' 个改进已应用, ' + failedChanges.length + ' 个失败');
     
     if (appliedChanges.length > 0) {
+        // Git 提交
         try {
             execSync('git add -A', { cwd: REPO_DIR });
             var summary = appliedChanges.map(function(c) { return c.desc; }).join(', ');
@@ -306,33 +340,41 @@ async function runOptimizationRound() {
         
         saveVersion(appliedChanges);
         
-        log('  🔄 重启服务器验证...');
-        await restartServer();
-        var restarted = await waitForServer();
-        
-        if (restarted) {
-            log('  ✅ 服务器重启成功! 新版本 v' + versionData.version);
+        // 重启验证 — 只在有重大后端改动时重启
+        var hasBackendChanges = appliedChanges.some(function(c) { return c.file === 'server.js'; });
+        if (hasBackendChanges) {
+            log('  🔄 重启服务器验证...');
+            await restartServer();
+            var restarted = await waitForServer();
+            
+            if (restarted) {
+                log('  ✅ 服务器重启成功! 新版本 v' + versionData.version);
+            } else {
+                log('  ❌ 服务器重启失败! 回退修改...');
+                try {
+                    execSync('git reset --hard HEAD~1', { cwd: REPO_DIR });
+                    log('  ↩️ 已回退到上一版本');
+                    // 重新启动干净的服务器
+                    await restartServer();
+                    await waitForServer();
+                } catch(e) { log('  ⚠️ 回退失败'); }
+            }
         } else {
-            log('  ❌ 服务器重启失败! 回退修改...');
-            try {
-                execSync('git reset --hard HEAD~1', { cwd: REPO_DIR });
-                log('  ↩️ 已回退到上一版本');
-            } catch(e) { log('  ⚠️ 回退失败'); }
+            log('  ℹ️ 仅前端改动，无需重启服务器');
         }
     } else {
-        log('  ⏭️ 本轮无新改进，跳过重启');
+        log('  ⏭️ 本轮无新改进');
     }
     
     log('  📈 总计: ' + versionData.rounds + ' 轮优化, ' + versionData.changes.length + ' 个改进已部署');
 }
 
-log('🏢 虚拟办公室 - 持续性自我优化系统 v3.1');
+log('🏢 虚拟办公室 - 持续性自我优化系统 v3.2');
 log('📅 启动时间: ' + new Date().toISOString());
 log('📊 当前版本: v' + versionData.version + ', 历史优化: ' + versionData.rounds + ' 轮');
 log('🔧 每个角色持续改进代码，项目不断进化');
 log('');
 
-// 立即执行一轮，之后每 5 分钟一轮
 (async function() {
     try {
         await runOptimizationRound();

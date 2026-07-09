@@ -10,9 +10,9 @@ function validateEndpoint(ep) {
     return { valid: true, action: action, id: parts[1] };
 }
 
-var validation = validateEndpoint(endpoint);
-if (!validation.valid) {
-    return { success: false, error: validation.error, allowedEndpoints: ALLOWED_ENDPOINTS };
+var epValidation = validateEndpoint(endpoint);
+if (!epValidation.valid) {
+    return { success: false, error: epValidation.error, allowedEndpoints: ALLOWED_ENDPOINTS };
 }
-const action = validation.action;
-const id = validation.id;
+const action = epValidation.action;
+const id = epValidation.id;
