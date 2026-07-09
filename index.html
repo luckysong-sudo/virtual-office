@@ -464,3 +464,23 @@ if (!localStorage.getItem('onboarding-seen')) {
     setTimeout(() => { const t=document.getElementById('onboarding-tooltip'); if(t) t.style.display='flex'; }, 2000);
 }
 </script>
+
+<!-- Alice's UX: Onboarding tooltip system -->
+<div id="onboarding-tooltip" class="tooltip-overlay" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,0.5); align-items:center; justify-content:center;">
+    <div class="tooltip-content" style="background:white; border-radius:12px; padding:2rem; max-width:500px; box-shadow:var(--shadow-lg);">
+        <h3>👋 欢迎来到虚拟办公室!</h3>
+        <p>这里有8位AI同事正在工作。点击任意角色查看详情，或通过聊天与他们交流。</p>
+        <ul style="text-align:left; margin:1rem 0;">
+            <li>🖱️ 拖拽画布移动视角</li>
+            <li>🔍 滚轮缩放</li>
+            <li>⌨️ 按 N 新建任务, B 查看简报</li>
+            <li>💬 点击角色头像发起对话</li>
+        </ul>
+        <button onclick="document.getElementById('onboarding-tooltip').style.display='none'; localStorage.setItem('onboarding-seen','true');" style="background:#6366f1; color:white; border:none; padding:0.75rem 1.5rem; border-radius:8px; cursor:pointer;">开始探索!</button>
+    </div>
+</div>
+<script>
+if (!localStorage.getItem('onboarding-seen')) {
+    setTimeout(() => { const t=document.getElementById('onboarding-tooltip'); if(t) t.style.display='flex'; }, 2000);
+}
+</script>
