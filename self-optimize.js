@@ -468,10 +468,12 @@ function getStateMachineHandler(state) {
         },
         
         [STATES.VERIFYING]: function(success) {
-            fsm.currentState = success ? STATES.IDLE : STATES.ROLLBACK;
             if (success) {
+                unlockRestart();
+                fsm.currentState = STATES.IDLE;
                 log(getStateLabel() + ' ✅ 验证通过，回到空闲状态');
             } else {
+                fsm.currentState = STATES.ROLLBACK;
                 log(getStateLabel() + ' ❌ 验证失败，进入回滚状态');
             }
         },
@@ -494,6 +496,7 @@ function getStateMachineHandler(state) {
         },
         
         [STATES.ERROR]: function() {
+            unlockRestart();
             log(getStateLabel() + ' 💀 错误状态 — 需要人工介入');
             log(getStateLabel() + '    最后错误: ' + (fsm.lastError || '未知'));
             // 错误状态下等待 10 分钟后自动恢复
