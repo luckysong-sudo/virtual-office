@@ -224,3 +224,15 @@ body{font-family:'Noto Sans SC',sans-serif;background:var(--bg);color:var(--text
 
 /* Scrollbar */
 ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+
+/* Additional design tokens per Carol's recommendation */
+:root {
+  --font-heading: 'Noto Sans SC', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.12);
+  --shadow-md: 0 4px 12px rgba(0,0,0,.25);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,.35);
+  --ease-out: cubic-bezier(.25,.46,.45,.94);
+  --ease-in-out: cubic-bezier(.42,0,.58,1);
+}
