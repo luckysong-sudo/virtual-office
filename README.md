@@ -1,16 +1,16 @@
-# Virtual Office - 虚拟办公室 v2
+# Virtual Office - 虚拟办公室 v3
 
-一个基于 PHP + SQLite + Vanilla JS 的虚拟办公室 Web 世界。内置 8 个由 Agnes AI 驱动的虚拟员工，他们在可视化的办公室场景中自由活动、工作、交流。
+一个基于 PHP + SQLite + Vanilla JS 的虚拟办公室 Web 世界。8 个由 Agnes AI 驱动的虚拟员工，在可视化的办公室中自由活动、工作、交流。
 
-## ✨ v2 新功能
+## ✨ v3 新功能
 
-- 🤖 **Agnes AI 集成** — 每个角色都有独立的 personality 配置文件，通过 OpenAI 兼容 API 驱动真实对话
-- 💬 **Agent 间对话** — 角色之间会自动进行环境对话，使用 Agnes AI 生成回复
-- 📡 **实时事件流** — 左侧面板滚动显示办公室事件（任务分配、聊天、走动等）
-- 👤 **角色详情面板** — 查看员工的效率、状态、位置、专长等详细信息
-- 📋 **任务管理系统** — 创建任务并分配给团队成员
-- 🗺️ **6 个功能区域** — 大堂、工程区、设计区、运维区、会议室、休息区
-- 🪴 **办公室装饰** — 绿植、咖啡机等细节
+- 👑 **老板模式** — 向全员下达指令，所有角色同时给出 AI 驱动的反应
+- 🌙 **日夜交替** — 切换日间/夜间模式，办公室氛围随之变化
+- 😊 **心情系统** — 每个角色有心情值（0-100），聊天和接收任务都会影响
+- 📊 **任务进度追踪** — 任务有进度条，完成后自动标记
+- 📡 **实时事件流** — 左侧面板滚动显示办公室所有事件
+- 👤 **角色详情** — 查看效率、心情、位置、专长的完整信息
+- 🎨 **心情光环** — 角色头像外圈颜色反映心情状态
 
 ## 🏢 角色阵容
 
@@ -29,7 +29,6 @@
 
 ### 前置要求
 - PHP 7.4+（需启用 `sqlite3` 和 `curl` 扩展）
-- Agnes API（可选，用于 AI 对话）
 
 ### 本地运行
 
@@ -40,11 +39,11 @@ php -S localhost:8080
 
 打开 `http://localhost:8080`
 
-### 配置 Agnes AI
+### 配置 Agnes AI（可选）
 
 ```bash
 export AGNES_API_URL="http://your-agnes-server:8000/v1"
-export AGNES_API_KEY="your-api-key"
+export AGNES_API_KEY="your-key-here"
 ```
 
 不配置也可运行，会回退到默认回复。
@@ -57,7 +56,7 @@ virtual-office/
 ├── api/
 │   └── index.php               # PHP API 后端 + SQLite
 ├── agents/
-│   └── personalities.json      # 角色人格配置文件
+│   └── personalities.json      # 角色人格配置
 ├── assets/
 │   ├── css/style.css           # 样式
 │   └── js/office.js            # 前端应用
@@ -65,34 +64,35 @@ virtual-office/
 └── README.md
 ```
 
+## 🎮 操作指南
+
+- **点击角色** → 打开聊天面板
+- **鼠标滚轮** → 缩放地图
+- **拖拽空白** → 平移地图
+- **👑 老板模式** → 向全员下达指令
+- **🌙 夜间模式** → 切换日夜氛围
+- **➕ 任务** → 创建并分配任务
+- **💬 聊天** → 与单个角色对话
+
 ## 🔌 API 端点
 
 | 端点 | 方法 | 说明 |
 |------|------|------|
 | `agents` | GET | 获取所有智能体 |
-| `agents/:id` | GET | 获取单个智能体 |
-| `chat` | POST | 与智能体对话（AI 驱动） |
-| `agent-chat` | POST | 智能体间对话（AI 驱动） |
+| `chat` | POST | 与智能体对话 |
+| `agent-chat` | POST | 智能体间对话 |
+| `boss-order` | POST | 老板全员指令 |
 | `tasks` | GET/POST | 任务管理 |
+| `task-progress` | POST | 更新任务进度 |
 | `events` | GET | 办公室事件流 |
 | `update` | POST | 更新智能体状态 |
 | `status` | GET | 办公室整体状态 |
-| `personality/:id` | GET | 获取角色人格配置 |
-
-## 🎮 操作指南
-
-- **点击角色头像** → 打开聊天面板
-- **鼠标滚轮** → 缩放地图
-- **拖拽空白区域** → 平移地图
-- **工具栏按钮** → 缩放/重置视图
-- **新建任务** → 分配给团队成员
-- **左侧事件流** → 观察办公室动态
 
 ## 🛠 自定义
 
 ### 添加新角色
 
-1. 在 `api/index.php` 的 seed 数组中添加
+1. 在 `api/index.php` seed 数组中添加
 2. 在 `agents/personalities.json` 中配置人格
 3. 重启服务
 
