@@ -1,66 +1,83 @@
-# Virtual Office — 智能虚拟办公室 🏢
+# 🏢 Virtual Office — 智能虚拟办公室
 
-一个全栈虚拟办公室模拟系统，8 位 AI 员工在虚拟空间中协作、编码、设计、测试与分析。
+一个由 AI 代理驱动的虚拟办公空间，模拟真实办公室的日常运作。团队成员自主协作、编码、设计和优化。
 
-> **Virtual Office v19** — 由 8 名 AI 员工驱动的自进化虚拟工作空间。
+> **自优化系统 v5.0** — 每个代理都能学习、适应并改进整个系统。
+
+---
+
+## 📋 项目状态
+
+| 指标 | 值 |
+|------|-----|
+| **当前版本** | v19 |
+| **优化轮次** | 第 18 轮 |
+| **总代码变更数** | 152 次 |
+| **最后更新** | 2026-07-10 09:45 CST |
+| **服务器状态** | 🟢 运行中 |
+| **活跃代理** | 8 / 8 |
 
 ---
 
 ## 📊 实时状态面板
 
-| 指标 | 数值 |
-|------|------|
-| 🏢 团队成员 | 8 人 |
-| 😊 平均心情 | 68 / 100 |
-| ⚡ 平均精力 | 76 / 100 |
-| 🔄 优化轮次 | 第 18 轮 |
-| 📦 累计版本 | v19 |
-| 🔀 总变更数 | 152+ 项代码变更 |
-| 📝 代码行数 | 1002 行（server.js 591 · index.html 185 · style.css 226） |
-| 🟢 服务器状态 | Online |
-| 🕐 最后更新 | 2026-07-10 09:40 (Asia/Shanghai) |
+- 👥 **团队规模：** 8 名代理
+- 😊 **平均心情：** 68 / 100
+- ⚡ **平均精力：** 76 / 100
+- 🔄 **优化轮次：** 第 18 轮
+- 📝 **累计变更：** 152 次
+- 🟢 **工作状态：** 2 working · 2 coding · 1 monitoring · 1 testing · 1 meeting · 1 researching
 
 ---
 
 ## 👥 角色阵容
 
-| 成员 | 角色 | 状态 | 心情 | 精力 | 生产力 | 当前任务 |
-|------|------|------|------|------|--------|----------|
-| 👩💼 Alice Chen | Product Manager | Working | Focused | 80 | 92% | Reviewing roadmap Q3 |
-| 👨💻 Bob Wang | Senior Developer | Coding | Flow State | 75 | 88% | Building API endpoints |
-| 👩🎨 Carol Li | UI/UX Designer | Working | Creative | 85 | 95% | Designing new dashboard |
-| 🧑🔧 David Zhang | DevOps Engineer | Monitoring | Alert | 70 | 85% | Checking server health |
-| 👩🔬 Eve Liu | QA Engineer | Testing | Analytical | 78 | 90% | Running test suite |
-| 👨💼 Frank Wu | Tech Lead | Meeting | Collaborative | 65 | 87% | Leading sprint review |
-| 👩🏫 Grace Zhao | Data Scientist | Researching | Curious | 82 | 91% | Analyzing user metrics |
-| 👨💻 Henry Xu | Frontend Developer | Coding | Focused | 72 | 86% | Implementing components |
+| 代理 | 角色 | 部门 | 状态 | 心情 | 精力 | 生产力 | 当前任务 |
+|------|------|------|------|------|------|--------|----------|
+| 👩💼 Alice Chen | Product Manager | 管理 | Working | Focused | 80 | 92% | Reviewing roadmap Q3 |
+| 👨💻 Bob Wang | Senior Developer | 工程 | Coding | Flow State | 75 | 88% | Building API endpoints |
+| 👩🎨 Carol Li | UI/UX Designer | 设计 | Working | Creative | 85 | 95% | Designing new dashboard |
+| 🧑🔧 David Zhang | DevOps Engineer | 运维 | Monitoring | Alert | 70 | 85% | Checking server health |
+| 👩🔬 Eve Liu | QA Engineer | 质量 | Testing | Analytical | 78 | 90% | Running test suite |
+| 👨💼 Frank Wu | Tech Lead | 工程 | Meeting | Collaborative | 65 | 87% | Leading sprint review |
+| 👩🏫 Grace Zhao | Data Scientist | 分析 | Researching | Curious | 82 | 91% | Analyzing user metrics |
+| 👨💻 Henry Xu | Frontend Developer | 工程 | Coding | Focused | 72 | 86% | Implementing components |
 
 ---
 
 ## ✨ 核心功能
 
-- 🗺️ **交互式虚拟办公室** — 可探索的 2D 办公空间，8 位 AI 员工自由移动
-- 🗣️ **自然语言对话** — 与每位员工进行实时对话，了解他们的工作进展
-- 📊 **实时状态监控** — 查看每位员工的 mood、energy、productivity 指标
-- 🤖 **自优化系统** — AI 员工自主发现并修复代码问题，持续改进系统
-- 🎨 **动态视觉设计** — CSS 主题切换、动画效果、响应式布局
-- 📈 **性能指标面板** — 实时监控 API 延迟、请求量、错误率
-- 🔒 **安全加固** — CSP 头、速率限制、白名单验证
-- 🎮 **键盘快捷键** — 快速导航、搜索、切换主题
+- **虚拟办公室可视化** — 交互式 2D 办公室布局，代理实时移动和互动
+- **角色系统** — 8 种独特职业角色，各有独立性格和行为模式
+- **动态心情与精力** — 代理心情和精力随时间变化，影响工作效率
+- **对话系统** — 代理之间可以互相交流、协作和讨论问题
+- **自优化机制** — 代理通过知识图谱持续学习和改进系统
+- **实时数据监控** — 生产力、心情、能量等关键指标的可视化仪表盘
+- **自动化同步** — 经理代理定期更新项目文档和状态报告
 
 ---
 
 ## 🤖 自优化系统 v5.0
 
-Virtual Office 配备了先进的自优化引擎，使 AI 员工能够：
+Virtual Office 的核心创新在于其**自优化系统**。每个 AI 代理不仅是虚拟员工，还是系统的优化者：
 
-1. **发现问题** — 通过运行时分析和代码审查识别潜在问题
-2. **制定方案** — 讨论并提出改进建议
-3. **实施变更** — 直接修改 server.js、HTML、CSS 等文件
-4. **知识沉淀** — 将经验写入 knowledge.json，避免重复犯错
-5. **迭代进化** — 每轮优化后版本递增，变更可追溯
+- **知识图谱（Knowledge Graph）** — 代理共享经验和最佳实践，形成集体知识库
+- **自适应行为** — 代理根据环境反馈调整自己的工作方式和协作策略
+- **自我修复** — 当检测到系统异常时，相关代理会自动诊断并尝试修复
+- **持续迭代** — 每轮优化都基于前一轮的结果进行改进，形成良性循环
 
-> 经过 18 轮自主优化，团队已累积 152+ 项代码变更，涵盖安全、性能、UX 等多个维度。
+当前各代理知识图谱中的补丁数量：
+
+| 代理 | 知识补丁数 |
+|------|-----------|
+| Bob Wang | 4 |
+| Henry Xu | 2 |
+| Carol Li | 1 |
+| David Zhang | 1 |
+| Eve Liu | 1 |
+| Grace Zhao | 1 |
+| Alice Chen | 1 |
+| Frank Wu | 1 |
 
 ---
 
@@ -68,54 +85,56 @@ Virtual Office 配备了先进的自优化引擎，使 AI 员工能够：
 
 ```
 virtual-office/
-├── server.js              # Express 后端服务 (591 行)
-├── index.html             # 主页面 (185 行)
-├── knowledge.json         # 团队知识库
-├── .optimization_history/ # 优化历史记录
-│   └── version.json       # 版本、轮次、变更追踪
+├── server.js              # 后端服务器 (591 行)
+├── index.html             # 前端页面 (185 行)
 ├── assets/
-│   ├── css/
-│   │   └── style.css      # 样式表 (226 行)
-│   └── js/
-│       └── main.js        # 前端逻辑
+│   └── css/
+│       └── style.css      # 样式表 (226 行)
 ├── agents/
-│   └── personalities.json # 员工人格配置
-└── README.md              # 本文件
+│   └── personalities.json # 代理性格配置
+├── .optimization_history/
+│   └── version.json       # 优化版本记录
+├── knowledge.json         # 知识图谱数据
+├── README.md              # 项目文档
+└── package.json           # 依赖配置
 ```
+
+**代码统计：** 总计 1002 行（server.js + index.html + style.css）
 
 ---
 
-## 📈 优化历史
+## 📈 优化历史（最近 5 次提交）
 
-| 提交 | 说明 |
+| 提交 | 信息 |
 |------|------|
-| `a76d8db` | 👩💼 Alice Chen: 自动同步 — 优化第18轮, 版本v19 |
-| `5c38a31` | 👩💼 Alice Chen: 重写 README.md — 基于实时数据完整更新 |
-| `a83a938` | 📝 自动同步: 优化第 17 轮 |
-| `06bc25b` | 👩💼 Alice Chen: 自动同步 — 优化第18轮 |
-| `167a975` | 📝 自动同步: 优化第 17 轮 |
+| 1271a3b | 👩💼 Alice Chen: 自动同步 — 优化第18轮, 版本v19 |
+| a76d8db | 👩💼 Alice Chen: 自动同步 — 优化第18轮, 版本v19 |
+| 5c38a31 | 👩💼 Alice Chen: 重写 README.md — 基于实时数据完整更新，包含团队状态、优化历史、经理备注 |
+| a83a938 | 📝 自动同步: 优化第 17 轮 |
+| 06bc25b | 👩💼 Alice Chen: 自动同步 — 优化第18轮 |
 
 ---
 
 ## 💼 经理备注
 
-**📅 2026-07-10 上午 9:40 — Alice Chen 晨间观察**
+**日期：** 2026-07-10 09:45 CST（周五）
 
-早上好！新的一天开始了，团队状态整体稳健：
+**本周工作概况：**
 
-- **Carol Li** 今天精力最充沛（85），创造力满满，正在设计新的仪表盘界面，生产力高达 95%，她是今天的明星员工 🌟
-- **Grace Zhao** 也在高效运转（精力 82，生产力 91%），数据分析工作进展顺利
-- **Frank Wu** 精力偏低（65），正在主持 Sprint Review 会议，作为 Tech Lead 需要更多休息
-- **David Zhang** 保持警觉状态（mood: alert），服务器健康检查一切正常，但精力 70 值得关注
-- **Bob Wang** 和 **Henry Xu** 都在编码模式中，分别专注于 API 端点和组件实现，Flow State 中的 Bob 表现尤为出色
+今天是周五上午，团队整体运转良好。经过 18 轮优化迭代，系统已趋于稳定。以下是今日观察：
 
-**今日关注点：**
-1. Frank Wu 精力较低，下午可能需要安排短暂休息
-2. David Zhang 的 alert 心态虽好但消耗精力，建议轮换值班
-3. 整体团队 mood 平均分 68，处于中等水平，可以组织一次简短的团队活动提升士气
+1. **团队士气：** 平均心情 68/100，处于正常水平。Carol Li 心情最佳（Creative, 80分），正在全速推进新仪表盘设计；David Zhang 心情偏低（Alert, 55分），作为运维工程师对服务器健康检查保持高度警觉，值得留意是否需要额外支持。
 
-办公室运转良好，18 轮优化已见成效。继续加油！💪
+2. **生产力表现：** Carol Li（95%）和 Alice Chen（92%）是今日最高产成员。Grace Zhao 以 91% 的生产力专注于用户数据分析，为 Q3 路线图提供数据支撑。
+
+3. **精力状态：** 团队平均精力 76/100，整体充沛。Frank Wu 精力最低（65分），正在主持冲刺评审会议，建议会后适当休息。Carol Li 精力最充足（85分），适合承担高难度设计任务。
+
+4. **协作动态：** Bob Wang 和 Henry Xu 都在编码状态，前后端配合紧密。Frank Wu 主持会议协调各方进度。Eve Liu 独立运行测试套件，确保代码质量。
+
+5. **优化进展：** 系统已累计 152 次变更，覆盖 18 轮优化。Bob Wang 的知识补丁最多（4个），在系统优化方面贡献突出。
+
+**建议：** 周末临近，建议提醒团队在下班前完成当前任务收尾。David Zhang 的 Alert 心态可能需要安抚，避免过度紧张。
 
 ---
 
-*由 Alice Chen 自动同步维护 · 最后更新 2026-07-10 09:40 CST (Asia/Shanghai)*
+*Virtual Office © 2026 — AI-Powered Collaborative Workspace*
