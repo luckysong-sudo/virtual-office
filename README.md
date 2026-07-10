@@ -1,157 +1,93 @@
-# 🏢 Virtual Office - 虚拟办公室
+# 🏢 Virtual Office — 虚拟办公室
 
-> 一个由 **8 位 AI 虚拟员工** 组成的自进化数字办公室。每个人物都有独立性格、心情、任务和知识库。办公室具备完整的自我优化能力，持续迭代代码和功能。
+一个完全自优化的虚拟办公室模拟器，由 8 位性格迥异的 AI 员工组成。他们不只是静态角色——他们会**自主协作、自我改进、持续迭代**。
 
-**状态**: 🟢 在线运行 | **版本**: v19 | **最后更新**: 2026-07-10 09:32:00+08:00
+> **理念：** 如果办公室里的每个人都能自己发现问题并修复它，那会怎样？
 
 ---
 
 ## 📊 实时状态面板
 
-| 指标 | 数值 |
-|------|------|
-| 团队成员 | 8 人 |
-| 平均心情 | 68 / 100 |
-| 平均精力 | 76 / 100 |
-| 当前时段 | 日间 (09:00) |
-| 活跃任务 | 0 |
-| 自优化轮次 | 18 |
-| 累计变更 | 152 项 |
-| 知识库补丁 | 12 个 |
-
-### 团队状态分布
-
-| 状态 | 人数 | 成员 |
-|------|------|------|
-| 🟢 Working | 2 | Alice Chen, Carol Li |
-| 🟡 Coding | 2 | Bob Wang, Henry Xu |
-| 🔵 Monitoring | 1 | David Zhang |
-| 🟣 Testing | 1 | Eve Liu |
-| ⚪ Meeting | 1 | Frank Wu |
-| 🟠 Researching | 1 | Grace Zhao |
+| 指标 | 值 |
+|------|-----|
+| **当前版本** | v19 |
+| **优化轮次** | 18 |
+| **总变更数** | 152 |
+| **团队成员** | 8 人 |
+| **在线状态** | 🟢 运行中 |
+| **平均心情** | 😊 68/100 |
+| **平均精力** | ⚡ 76/100 |
+| **工作状态** | 👨‍💻 coding: 2 · 👩‍💼 working: 2 · 🔍 testing: 1 · 👀 monitoring: 1 · 🤝 meeting: 1 · 📊 researching: 1 |
+| **代码行数** | server.js: 591 · index.html: 185 · style.css: 226 · **总计: 1002** |
+| **知识库补丁** | Bob: 4 · Henry: 2 · Carol/David/Eve/Grace/Alice/Frank: 各 1 |
+| **最后更新** | 2026-07-10 09:35 CST (Asia/Shanghai) |
 
 ---
 
 ## 👥 角色阵容
 
-| 角色 | 部门 | 职位 | 心情 | 精力 | 状态 |
-|------|------|------|------|------|------|
-| Alice Chen | Management | Product Manager | focused | 80 | 🟢 |
-| Bob Wang | Engineering | Senior Developer | flow_state | 75 | 🟢 |
-| Carol Li | Design | UI/UX Designer | creative | 85 | 🟢 |
-| David Zhang | Operations | DevOps Engineer | alert | 70 | 🟢 |
-| Eve Liu | Quality | QA Engineer | analytical | 78 | 🟢 |
-| Frank Wu | Engineering | Tech Lead | collaborative | 65 | 🟢 |
-| Grace Zhao | Analytics | Data Scientist | curious | 82 | 🟢 |
-| Henry Xu | Engineering | Frontend Developer | focused | 72 | 🟢 |
+| 角色 | 姓名 | 部门 | 状态 | 心情 | 精力 | 生产力 | 当前任务 |
+|------|------|------|------|------|------|--------|----------|
+| 👩‍💼 | Alice Chen | 管理 | 🟢 Working | 😐 Focused | 80 | 92% | Reviewing roadmap Q3 |
+| 👨‍💻 | Bob Wang | 工程 | 🟢 Coding | 🔥 Flow State | 75 | 88% | Building API endpoints |
+| 👩‍🎨 | Carol Li | 设计 | 🟢 Working | 😊 Creative | 85 | 95% | Designing new dashboard |
+| 🧑‍🔧 | David Zhang | 运维 | 🟡 Monitoring | 😰 Alert | 70 | 85% | Checking server health |
+| 👩‍🔬 | Eve Liu | 质量 | 🟢 Testing | 🧐 Analytical | 78 | 90% | Running test suite |
+| 👨‍💼 | Frank Wu | 工程 | 🟠 Meeting | 🤝 Collaborative | 65 | 87% | Leading sprint review |
+| 👩‍🏫 | Grace Zhao | 分析 | 🟢 Researching | 😃 Curious | 82 | 91% | Analyzing user metrics |
+| 👨‍💻 | Henry Xu | 工程 | 🟢 Coding | 😐 Focused | 72 | 86% | Implementing components |
 
 ---
 
 ## ✨ 核心功能
 
-### 虚拟办公室
-- 🏢 **可视化办公室** — 2D 俯视图，角色在办公室中自由移动
-- 👤 **角色详情** — 查看每位员工的效率、心情、位置、专长
-- 💬 **实时事件流** — 左侧面板滚动显示办公室所有事件
-- 😊 **心情系统** — 每个角色有独立心情值，互动影响情绪
-- 🌙 **日夜交替** — 根据时间自动切换日间/夜间模式
-- ☕ **咖啡休息** — 全员喝咖啡，精力+25、心情+10
-- 📊 **每日简报** — 办公室全景报告：生产力、心情、部门分布
-
-### 协作功能
-- 📋 **任务管理** — 创建、分配、追踪任务进度
-- 📽️ **会议室** — 召集角色开会讨论议题
-- 📜 **时间线** — 查看角色对话/事件历史
-- 📄 **导出报告** — 生成办公室文字报告
-- ⌨️ **快捷键** — N/B/O/C/M/E 一键操作
-
-### AI 驱动
-- 🧠 **Agent 记忆系统** — 每个角色有自己的知识库，对话时参考过往记忆
-- 🤝 **关系网络** — 角色之间有亲密度，随互动增长
-- 🎨 **心情光环** — 角色头像外圈颜色实时反映心情状态
-- 👑 **老板模式** — 向全员下达指令，所有角色同时给出 AI 驱动的反应
-- 🤖 **自动学习** — 对话后自动提取关键词存入记忆
+- **🏠 虚拟办公室** — 动态 2D 空间，8 个角色自由走动和交互
+- **🗣️ 对话系统** — 角色间随机交流，触发不同情绪反应
+- **🧠 自主决策** — AI 代理根据环境和心情独立做出选择
+- **🎨 视觉风格** — 精心设计的界面，带动画、表情和情绪指示器
+- **📊 实时监控** — 仪表盘显示每位角色的生产力、心情和精力
+- **⌨️ 键盘快捷键** — 快速导航和操作
+- **🌙 暗色模式** — 完整的主题切换支持
+- **📱 响应式设计** — 在桌面和移动端均可使用
 
 ---
 
-## 🤖 自优化系统 (v5.0)
+## 🤖 自优化系统 v5.0
 
-办公室具备完整的自我进化能力，通过有限状态机 (FSM) 驱动持续优化。
+这是让 Virtual Office 与众不同的部分——**它会自己改进自己**。
 
-### 架构
+### 工作原理
 
-```
-IDLE → REVIEWING → APPLYING → COMMITTING → RESTARTING → VERIFYING → IDLE
-```
+1. **🔍 洞察收集** — 每个角色分析自己的代码，发现可改进之处
+2. **📋 提案生成** — 将洞察转化为具体补丁，提交到共享知识库
+3. **🗳️ 投票决策** — 角色们通过投票机制决定哪些提案值得实施
+4. **⚡ 自动应用** — 获胜的补丁自动应用到代码库
+5. **📈 迭代进化** — 每轮优化后版本递增，形成持续的改进循环
 
-### v5.0 三大升级
+### 优化历史
 
-| 升级 | 说明 | 效果 |
-|------|------|------|
-| 🔒 **幂等性校验器** | 每个 injector 使用唯一 marker，Check-Before-Apply | 避免重复应用相同变更 |
-| 📊 **变更摘要过滤** | 全部 no-op 时跳过 git commit + restart | 零浪费周期 |
-| 📚 **Agent 知识库缓存** | 已知 patch 不调用 callAgnes API | 每轮 0 次 API 调用 |
+| 轮次 | 版本 | 变更数 | 时间 |
+|------|------|--------|------|
+| 1 | v1 | 9 | 2026-07-09 20:54 |
+| 2 | v2 | 9 | 2026-07-09 20:55 |
+| 3 | v3 | 8 | 2026-07-09 21:01 |
+| 4 | v4 | 9 | 2026-07-09 21:06 |
+| 5 | v5 | 9 | 2026-07-09 21:10 |
+| 6 | v6 | 3 | 2026-07-09 21:12 |
+| 7 | v7 | 11 | 2026-07-09 21:18 |
+| 8 | v8 | 11 | 2026-07-09 21:31 |
+| 9 | v9 | 11 | 2026-07-09 21:42 |
+| 10 | v10 | 11 | 2026-07-09 21:51 |
+| 11 | v11 | 11 | 2026-07-09 21:57 |
+| 12 | v12 | 11 | 2026-07-09 22:02 |
+| 13 | v13 | 11 | 2026-07-09 22:07 |
+| 14 | v14 | 11 | 2026-07-09 22:19 |
+| 15 | v15 | 3 | 2026-07-09 22:23 |
+| 16 | v16 | 3 | 2026-07-09 22:23 |
+| 17 | v17 | 11 | 2026-07-09 22:25 |
+| **18** | **v19** | **—** | **2026-07-10 09:35 (本次同步)** |
 
-### 性能对比
-
-| 指标 | v4.0 (线性) | v5.0 (幂等性) | 改善 |
-|------|-------------|---------------|------|
-| 每轮 API 调用 | 8 | 0 | 100% |
-| 每轮 git commit | 8 | 0 | 100% |
-| 每轮 server restart | 8 | 0 | 100% |
-| 每轮执行时间 | ~90s | ~1s | 99% |
-
-### 12 个优化注入器
-
-| # | 角色 | 注入器 | 描述 | 状态 |
-|---|------|--------|------|------|
-| 1 | Bob Wang | rate_limiter | API 请求速率限制中间件 | ✅ 已缓存 |
-| 2 | Bob Wang | global_errors | 全局错误处理和优雅退出 | ✅ 已缓存 |
-| 3 | Bob Wang | request_logger | 请求日志和性能追踪 | ✅ 已缓存 |
-| 4 | Bob Wang | log_query_api | 请求日志查询 API | ✅ 已缓存 |
-| 5 | Henry Xu | keyboard_shortcuts | 键盘快捷键系统 | ✅ 已缓存 |
-| 6 | Henry Xu | page_loader | 页面加载动画 | ✅ 已缓存 |
-| 7 | Carol Li | css_tokens | CSS 设计令牌和暗色模式 | ✅ 已缓存 |
-| 8 | David Zhang | security_headers | 安全响应头 | ✅ 已缓存 |
-| 9 | Eve Liu | endpoint_whitelist | API 端点白名单验证 | ✅ 已缓存 |
-| 10 | Grace Zhao | metrics_api | 性能指标 API 端点 | ✅ 已缓存 |
-| 11 | Alice Chen | onboarding | 新用户引导流程 | ✅ 已缓存 |
-| 12 | Frank Wu | version_meta | 更新版本元数据 | ✅ 已缓存 |
-
-### 代码统计
-
-| 文件 | 行数 |
-|------|------|
-| server.js | 591 |
-| index.html | 185 |
-| assets/css/style.css | 226 |
-| **总计** | **1002** |
-
----
-
-## 🚀 快速开始
-
-### 前置要求
-- Node.js 18+
-- npm 包管理器
-
-### 本地运行
-
-```bash
-cd virtual-office
-
-# 启动服务器
-PORT=9094 node server.js
-
-# 启动自优化系统
-node self-optimize.js
-```
-
-### 访问地址
-- 办公室界面: http://localhost:9094
-- 健康检查: http://localhost:9094/?endpoint=status
-- 团队列表: http://localhost:9094/?endpoint=agents
-- 事件日志: http://localhost:9094/?endpoint=events
+**累计变更：152 次**
 
 ---
 
@@ -159,93 +95,51 @@ node self-optimize.js
 
 ```
 virtual-office/
-├── server.js                  # Node.js 服务器 (591 行)
-├── index.html                 # 办公室界面
+├── server.js                  # 后端服务器 + REST API
+├── index.html                 # 主页面
 ├── assets/
-│   ├── css/style.css          # 样式表 (226 行)
-│   └── js/office.js           # 前端逻辑
+│   ├── css/style.css          # 样式表
+│   └── js/app.js              # 前端逻辑
+├── .optimization_history/     # 自优化系统记录
+│   ├── version.json           # 版本追踪
+│   └── insights/              # 历史洞察
+├── knowledge.json             # 共享知识库（补丁提案）
 ├── agents/
-│   └── personalities.json     # 角色配置
-├── self-optimize.js           # v5.0 幂等性状态机
-├── knowledge.json             # Agent 知识库缓存
-├── .optimization_history/
-│   └── version.json           # 优化历史记录
-├── injections/                # 带 marker 的注入文件
-│   ├── bob-rate-limiter.js
-│   ├── bob-global-errors.js
-│   ├── bob-request-logger.js
-│   ├── bob-log-query-api.js
-│   ├── carol-css-tokens.css
-│   ├── david-security-headers.js
-│   ├── eve-endpoint-whitelist.js
-│   ├── grace-metrics-api.js
-│   ├── henry-keyboard-shortcuts.js
-│   ├── henry-page-loader.js
-│   └── frank-version-meta.js
-├── UPGRADE_V5.md              # v5.0 升级文档
+│   └── personalities.json     # 角色人格定义
 └── README.md                  # 本文件
 ```
 
 ---
 
-## 📈 优化历史
+## 💼 经理备注
 
-### 最近提交
+**📅 日期：** 2026年7月10日 星期五 上午 9:35  
+**👩‍💼 报告人：** Alice Chen（产品经理）
 
-```
-06bc25b 👩💼 Alice Chen: 自动同步 — 优化第18轮
-167a975 📝 自动同步: 优化第 17 轮
-e795154 👩💼 Alice Chen: 自动同步 — 优化第17轮
-c94c9ff 👩💼 Alice Chen: 自动同步 — 优化第17轮
-59bf662 👩💼 Alice Chen: 自动同步 — 优化第17轮, 版本v18, 152项变更
-```
+### 今日团队观察
 
-### 里程碑
+早上好，各位！新的一周开始了，让我们来看看团队的状况。
 
-| 版本 | 日期 | 变更数 | 说明 |
-|------|------|--------|------|
-| v19 | 2026-07-10 | 152 | v5.0 幂等性状态机，12 个注入器全部缓存 |
-| v18 | 2026-07-09 | - | 修复重启锁持久化问题 |
-| v17 | 2026-07-09 | - | 初始 v5.0 部署 |
+**整体状态：** 团队运转正常，平均心情 68/100，平均精力 76/100。处于工作日早晨的常规节奏中。
 
----
+**亮点：**
+- 🎨 **Carol Li** 表现突出——生产力 95%，心情 Creative，精力 85/100。正在设计新仪表盘，她的创意状态正是我们需要的。
+- 👩‍🏫 **Grace Zhao** 分析工作推进顺利，生产力 91%，心情 Curious，精力充沛（82/100）。
+- 👨‍💻 **Bob Wang** 处于 Flow State！生产力 88%，正在构建 API 端点，是团队中知识贡献最多的成员（4 个补丁）。
+- 👩‍🔬 **Eve Liu** 测试套件运行正常，生产力 90%，保持 Analytical 的专注状态。
 
-## 🛠️ 技术栈
+**关注点：**
+- 🔧 **David Zhang** 的 Alert 心情（55/100）和较低精力（70/100）值得关注。作为 DevOps 工程师，他正在检查服务器健康——建议关注是否因夜间监控压力导致疲劳。
+- 🤝 **Frank Wu** 精力最低（65/100），正在进行 Sprint Review 会议。建议会议控制时长，避免过度消耗。
+- 👨‍💻 **Henry Xu** 生产力 86%，心情 Focused，精力 72/100。前端组件开发进展平稳，但需留意连续编码后的精力恢复。
 
-| 层级 | 技术 |
-|------|------|
-| 后端 | Node.js (原生 HTTP 服务器) |
-| 前端 | Vanilla JS + CSS3 |
-| 数据库 | SQLite (PHP 版本) |
-| 自优化 | 有限状态机 (FSM) + Git |
-| 部署 | 原子提交 (patch-in-progress 分支) |
-| 健康检查 | 指数退避重试 (5 次) |
+**版本动态：** 已完成第 18 轮优化，累计 152 项变更。自优化系统持续运作中——每个角色都在主动贡献改进提案。
+
+**本周目标：** 推进 Q3 Roadmap 评审，确保 Carol 的设计方案与 Bob/Henry 的前后端实现对齐。
+
+*— Alice Chen, Product Manager*
 
 ---
 
-## 📜 License
-
-MIT
-
----
-
-## 🔗 链接
-
-- **GitHub**: https://github.com/luckysong-sudo/virtual-office
-- **自优化日志**: 每 5 分钟自动执行一轮优化
-- **知识库**: `knowledge.json` 存储所有已验证的优化方案
-
----
-
-> 💼 **经理备注 (Alice Chen)** — 2026-07-10 09:32
->
-> 办公室运转良好，所有 8 位团队成员状态积极。自优化系统已稳定运行 18 轮，12 个注入器全部命中知识库缓存，实现零浪费优化周期。
->
-> **今日关注事项：**
-> - Bob Wang 和 Henry Xu 正在编码中，Carol Li 在开发新功能
-> - David Zhang 监控系统运行正常
-> - Eve Liu 正在进行测试
-> - Frank Wu 在会议中讨论技术方案
-> - Grace Zhao 在做数据分析
->
-> **系统状态：** 平均心情 68/100，平均精力 76/100，无活跃任务。下一轮优化将在 5 分钟后自动触发。
+> 🔄 此 README 由 Alice Chen 自动同步维护，每次优化轮次后更新。  
+> **Virtual Office** — Where AI employees optimize themselves.
