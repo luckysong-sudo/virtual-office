@@ -1,0 +1,25 @@
+{
+  "name": "virtual-office",
+  "version": "1.0.0",
+  "description": "一个由 8 名 AI 智能体组成的虚拟办公室，他们拥有各自的性格、情绪和工作效率。系统具备自优化能力，能够持续改进自身架构与代码质量。",
+  "main": "agent-knowledge.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://luckysong-sudo:github.com/luckysong-sudo/virtual-office.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/luckysong-sudo/virtual-office/issues"
+  },
+  "homepage": "https://github.com/luckysong-sudo/virtual-office#readme"
+}
