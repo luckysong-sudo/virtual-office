@@ -79,6 +79,84 @@ function saveVersion(changes) {
         state: fsm.currentState
     });
     fs.writeFileSync(VERSION_FILE, JSON.stringify(versionData, null, 2));
+    // 优化完成后自动同步到 GitHub
+    syncToGitHub(changes);
+}
+
+function syncToGitHub(changes) {
+    var readmePath = path.join(REPO_DIR, 'README.md');
+    if (!fs.existsSync(readmePath)) return;
+    
+    var readme = fs.readFileSync(readmePath, 'utf-8');
+    var modified = false;
+    var now = new Date().toISOString().replace('T',' ').split('.')[0] + '+08:00';
+    
+    // 1. 更新版本号和最后更新时间
+    var newHeader = '**状态**: 🟢 在线运行 | **版本**: v' + versionData.version + ' | **最后更新**: ' + now;
+    var oldHeaderMatch = readme.match(/\*\*状态\*\*.*\| \*\*最后更新\*\*: .*/);
+    if (oldHeaderMatch) {
+        readme = readme.replace(oldHeaderMatch[0], newHeader);
+        modified = true;
+    }
+    
+    // 2. 更新优化轮次
+    var newRounds = '自优化轮次 | ' + versionData.rounds;
+    var oldRoundsMatch = readme.match(/(自优化轮次 \| )\d+/);
+    if (oldRoundsMatch) {
+        readme = readme.replace(oldRoundsMatch[0], newRounds);
+        modified = true;
+    }
+    
+    // 3. 更新累计变更
+    var changeCount = changes && changes.length ? changes.length + ' 项' : '0 项';
+    var newChanges = '累计变更 | ' + changeCount;
+    var oldChangesMatch = readme.match(/(累计变更 \| ).*/);
+    if (oldChangesMatch) {
+        readme = readme.replace(oldChangesMatch[0], newChanges);
+        modified = true;
+    }
+    
+    if (!modified) {
+        log('  📝 README 内容无需更新');
+        return;
+    }
+    
+    // 4. 写入更新后的 README
+    fs.writeFileSync(readmePath, readme);
+    
+    // 5. git add + commit + push
+    try {
+        execSync('git add -A', { cwd: REPO_DIR, timeout: 5000 });
+        var diffResult;
+        try {
+            diffResult = execSync('git diff --cached --quiet 2>&1 || echo CHANGES', { cwd: REPO_DIR, encoding: 'utf-8' }).trim();
+        } catch(ex) { diffResult = 'CHANGES'; }
+        
+        if (diffResult === 'CHANGES') {
+            execSync('git commit -m "📝 自动同步: 优化第 ' + versionData.rounds + ' 轮"', 
+                { cwd: REPO_DIR, timeout: 10000 });
+        }
+        execSync('git push origin main', { cwd: REPO_DIR, timeout: 30000 });
+        log('  🚀 README 已自动同步到 GitHub');
+    } catch(e) {
+        log('  ⚠️ GitHub 同步失败: ' + (e.message || '').substring(0, 100));
+    }
+}
+
+function getStatusFromServer(callback) {
+    var req = http.get('http://localhost:' + PORT + '/?endpoint=status', function(res) {
+        var data = '';
+        res.on('data', function(chunk) { data += chunk; });
+        res.on('end', function() {
+            try {
+                callback(JSON.parse(data));
+            } catch(e) {
+                callback(null);
+            }
+        });
+    });
+    req.on('error', function() { callback(null); });
+    req.setTimeout(3000, function() { req.abort(); callback(null); });
 }
 
 // ============================
@@ -684,6 +762,7 @@ function processApplyRound() {
                 fsm.currentState = STATES.IDLE;
                 log('  ✅ 前端改动已提交，无需重启');
             } else {
+                syncToGitHub([]);
                 fsm.currentState = STATES.IDLE;
             }
         });
@@ -704,6 +783,9 @@ function processRestart() {
             if (success) {
                 saveVersion(fsm.pendingChanges);
                 log('  📈 总计: ' + versionData.rounds + ' 轮优化, ' + versionData.changes.length + ' 个改进已部署');
+            } else {
+                // 无新变更时也同步 README（更新时间和版本号）
+                syncToGitHub([]);
             }
         });
     });
@@ -741,3 +823,9 @@ setInterval(function() {
         log('📊 状态: ' + fsm.currentState + ' | 待处理: ' + fsm.pendingChanges.length + ' | 失败次数: ' + fsm.consecutiveFailures);
     }
 }, 60000);
+
+// 每 5 分钟自动同步 README 到 GitHub
+setInterval(function() {
+    log('📝 定时同步 README 到 GitHub...');
+    syncToGitHub(fsm.pendingChanges);
+}, 5 * 60 * 1000);
