@@ -107,8 +107,9 @@ function syncToGitHub(changes) {
         modified = true;
     }
     
-    // 3. 更新累计变更
-    var changeCount = changes && changes.length ? changes.length + ' 项' : '0 项';
+    // 3. 更新累计变更 — 优先用 changes 参数，否则读 version.json
+    var totalChanges = versionData.changes ? versionData.changes.reduce(function(s,c){return s+(c.changes?c.changes.length:0)}, 0) : 0;
+    var changeCount = (changes && changes.length) ? changes.length + ' 项' : totalChanges + ' 项';
     var newChanges = '累计变更 | ' + changeCount;
     var oldChangesMatch = readme.match(/(累计变更 \| ).*/);
     if (oldChangesMatch) {
@@ -762,7 +763,7 @@ function processApplyRound() {
                 fsm.currentState = STATES.IDLE;
                 log('  ✅ 前端改动已提交，无需重启');
             } else {
-                syncToGitHub([]);
+                syncToGitHub(fsm.pendingChanges);
                 fsm.currentState = STATES.IDLE;
             }
         });
@@ -785,7 +786,7 @@ function processRestart() {
                 log('  📈 总计: ' + versionData.rounds + ' 轮优化, ' + versionData.changes.length + ' 个改进已部署');
             } else {
                 // 无新变更时也同步 README（更新时间和版本号）
-                syncToGitHub([]);
+                syncToGitHub(fsm.pendingChanges);
             }
         });
     });
