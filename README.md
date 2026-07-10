@@ -1,79 +1,65 @@
-# 🏢 Virtual Office — 虚拟办公室模拟器
+# 🏢 Virtual Office — 虚拟办公室
 
-一个动态的虚拟办公室场景，展示 8 位 AI 角色在同一空间内协作办公。每个角色拥有独立性格、任务和工作状态，实时模拟办公室的生动氛围。
+一个自优化的虚拟办公空间模拟系统，8 位 AI 角色在虚拟办公室中协作、编码、设计和测试。
 
-> **最后更新：** 2026-07-10 17:55 (Asia/Shanghai)
+> **经理视角：** 由 Alice Chen（产品经理）负责日常监控与文档同步。
 
 ---
 
 ## 📊 实时状态面板
 
-| 指标 | 数值 |
-|------|------|
-| **版本号** | v19 |
-| **优化轮次** | 第 18 轮 |
-| **总变更数** | 152 项 |
-| **团队成员** | 8 人 |
-| **活跃任务** | 0 个新任务（全员自主工作） |
-| **平均精力** | 76% |
-| **平均心情** | 68% |
-| **夜间模式** | ❌ 非夜间时段 |
-| **代码行数** | 1002 行 (server.js: 591, index.html: 185, style.css: 226) |
+| 指标 | 值 |
+|------|-----|
+| 🏷️ 版本 | **v19** |
+| 🔄 优化轮次 | **18** |
+| 📝 累计变更数 | **152** |
+| 👥 团队成员 | **8** |
+| ⚡ 平均精力 | **76%** |
+| 😊 平均心情 | **68** |
+| 🟢 在线状态 | Working: 2 · Coding: 2 · Monitoring: 1 · Testing: 1 · Meeting: 1 · Researching: 1 |
+| 🕐 最后更新 | 2026-07-10 18:05 (Asia/Shanghai) |
 
 ---
 
 ## 👥 角色阵容
 
-| 角色 | 职位 | 状态 | 心情 | 精力 | 生产力 | 当前任务 |
-|------|------|------|------|------|--------|----------|
-| 👩💼 Alice Chen | Product Manager | 工作中 | 专注 | 80% | 92% | Reviewing roadmap Q3 |
-| 👨💻 Bob Wang | Senior Developer | 编码中 | 心流 | 75% | 88% | Building API endpoints |
-| 👩🎨 Carol Li | UI/UX Designer | 工作中 | 创意 | 85% | 95% | Designing new dashboard |
-| 🧑🔧 David Zhang | DevOps Engineer | 监控中 | 警觉 | 70% | 85% | Checking server health |
-| 👩🔬 Eve Liu | QA Engineer | 测试中 | 分析 | 78% | 90% | Running test suite |
-| 👨💼 Frank Wu | Tech Lead | 会议中 | 协作 | 65% | 87% | Leading sprint review |
-| 👩🏫 Grace Zhao | Data Scientist | 研究中 | 好奇 | 82% | 91% | Analyzing user metrics |
-| 👨💻 Henry Xu | Frontend Developer | 编码中 | 专注 | 72% | 86% | Implementing components |
+| 角色 | 姓名 | 部门 | 状态 | 心情 | 精力 | 生产力 | 当前任务 |
+|------|------|------|------|------|------|--------|----------|
+| 👩‍💼 | Alice Chen | 管理 | 🟢 Working | 😐 Focused | 80% | 92% | Reviewing roadmap Q3 |
+| 👨‍💻 | Bob Wang | 工程 | 🟢 Coding | 😄 Flow State | 75% | 88% | Building API endpoints |
+| 👩‍🎨 | Carol Li | 设计 | 🟢 Working | 🎨 Creative | 85% | 95% | Designing new dashboard |
+| 🧑‍🔧 | David Zhang | 运维 | 🟢 Monitoring | 😐 Alert | 70% | 85% | Checking server health |
+| 👩‍🔬 | Eve Liu | 质量 | 🟢 Testing | 🧐 Analytical | 78% | 90% | Running test suite |
+| 👨‍💼 | Frank Wu | 工程 | 🟢 Meeting | 🤝 Collaborative | 65% | 87% | Leading sprint review |
+| 👩‍🏫 | Grace Zhao | 分析 | 🟢 Researching | 🧠 Curious | 82% | 91% | Analyzing user metrics |
+| 👨‍💻 | Henry Xu | 工程 | 🟢 Coding | 😐 Focused | 72% | 86% | Implementing components |
 
 ---
 
 ## ✨ 核心功能
 
-- **🏠 虚拟办公室场景** — 网格化办公室布局，角色自由移动
-- **👥 多角色系统** — 8 位独特 AI 角色，各有性格和职责
-- **💬 对话系统** — 角色之间可以发起自然对话
-- **📋 任务系统** — 角色有当前任务和优先级管理
-- **😊 情绪引擎** — 心情和精力影响角色行为和对话
-- **🎨 丰富 UI** — 现代化的办公室可视化界面
-- **📱 响应式设计** — 适配桌面和移动端浏览器
-- **🔄 自优化系统** — 角色通过优化轮次持续改进代码
+- **🏢 虚拟办公室** — 可交互的 2D 办公室布局，角色自由移动和交互
+- **👥 AI 角色系统** — 8 位各具性格的虚拟员工，拥有独立的心情、精力和任务系统
+- **💬 实时对话** — 角色之间可以发起对话，影响彼此的心情和生产力
+- **📋 任务管理** — 角色分配和执行各种开发任务（编码、设计、测试、运维等）
+- **📊 状态监控** — RESTful API 提供办公室实时状态、角色信息和交互日志
+- **⌨️ 键盘快捷键** — 支持快速操作，提升用户体验
+- **🎨 CSS 主题** — 设计令牌系统和暗色模式支持
+- **🔒 安全机制** — 请求速率限制、端点白名单验证、全局错误处理
+- **📈 性能追踪** — 实时性能指标和请求日志查询 API
 
 ---
 
 ## 🤖 自优化系统 v5.0
 
-Virtual Office 配备了独特的自优化引擎，每轮优化中：
+Virtual Office 内置自优化引擎，通过以下循环持续改进：
 
-1. **知识收集** — 从所有角色收集代码变更建议
-2. **冲突检测** — 识别跨角色的文件修改冲突
-3. **智能合并** — 按角色专长分配文件修改权
-4. **代码审查** — 每个角色审查非自己负责的文件
-5. **版本发布** — 合并后生成新版本号和提交记录
+1. **🔍 观察阶段** — 每个角色分析当前办公室状态和问题
+2. **📝 知识积累** — 角色将发现的问题和改进方案记录到知识库
+3. **🔄 优化迭代** — 基于知识库，角色自主修改代码、配置和设计
+4. **📊 效果评估** — 经理（Alice Chen）评估优化效果并调整策略
 
-当前已进行 **18 轮优化**，累计 **152 项变更**，代码量达 **1002 行**。
-
-### 📚 知识库状态
-
-| 角色 | 知识库条目 | 补丁数 |
-|------|-----------|--------|
-| Bob Wang | Senior Developer | 4 |
-| Henry Xu | Frontend Developer | 2 |
-| Carol Li | UI/UX Designer | 1 |
-| David Zhang | DevOps Engineer | 1 |
-| Eve Liu | QA Engineer | 1 |
-| Grace Zhao | Data Scientist | 1 |
-| Alice Chen | Product Manager | 1 |
-| Frank Wu | Tech Lead | 1 |
+> **当前进度：** 已完成 18 轮优化迭代，累计 152 项变更，稳定运行于 v19。
 
 ---
 
@@ -82,64 +68,50 @@ Virtual Office 配备了独特的自优化引擎，每轮优化中：
 ```
 virtual-office/
 ├── server.js              # 后端服务 (591 行)
-├── index.html             # 前端主页面 (185 行)
-├── knowledge.json         # 角色知识库
+├── index.html             # 前端页面 (185 行)
 ├── assets/
 │   └── css/
-│       └── style.css      # 样式表 (226 行)
+│       └── style.css      # 样式文件 (226 行)
+├── agents/
+│   └── personalities.json # 角色性格配置
 ├── .optimization_history/
 │   └── version.json       # 优化版本追踪
+├── knowledge.json         # 团队知识库
 └── README.md              # 项目文档
 ```
+
+**代码总计：** 1002 行
 
 ---
 
 ## 📈 优化历史
 
-最近 8 次提交：
+最近 5 次 Git 提交：
 
-| 提交 | 消息 |
-|------|------|
-| a7a3fef | 👩💼 Alice Chen: 自动同步 — 优化第19轮, 版本v19 |
-| 2af0e91 | 👩💼 Alice Chen: 自动同步 — 优化第19轮, 版本v19 |
-| 396c476 | 👩💼 Alice Chen: 自动同步 — 优化第19轮, 版本v19 |
-| 55b5f27 | 👩💼 Alice Chen: 自动同步 — 优化第19轮, 版本v19 |
-| 9926e47 | 👩💼 Alice Chen: 自动同步 — 优化第19轮, 版本v19 |
-| f894c09 | 👩💼 Alice Chen: 自动同步 — 优化第19轮, 版本v19 |
-| 181ba04 | 👩💼 Alice Chen: 自动同步 — 优化第19轮, 版本v19 |
-| 7a696f6 | 👩💼 Alice Chen: 自动同步 — 优化第19轮, 版本v19 |
+| 提交 | 作者 | 说明 |
+|------|------|------|
+| de895d9 | Alice Chen | 👩‍💼 自动同步 — 优化第19轮, 版本v19 |
+| 6af6f91 | Alice Chen | 👩‍💼 自动同步 — 优化第19轮, 版本v19 |
+| b7e07b2 | Alice Chen | 👩‍💼 自动同步 — 优化第19轮, 版本v19 |
+| 8db70ac | Alice Chen | 👩‍💼 自动同步 — 优化第19轮, 版本v19 |
+| f30eddc | Alice Chen | 👩‍💼 自动同步 — 优化第19轮, 版本v19 |
 
 ---
 
 ## 💼 经理备注
 
-**日期：** 2026-07-10 (周五) 17:55 CST  
-**报告人：** Alice Chen, Product Manager
+**👩‍💼 Alice Chen — 2026-07-10 下午工作观察**
 
-### 今日团队观察
+今日团队整体运转良好。下午 6 点时办公室呈现以下状态：
 
-今天是周五下午，团队整体状态良好。以下是我的观察：
+- **高生产力梯队：** Carol Li（95%）和 Grace Zhao（91%）表现突出，Carol 正在设计新仪表盘，Grace 深入分析用户指标，两位都保持着充沛的精力。
+- **工程组双核驱动：** Bob Wang 和 Henry Xu 都处于编码状态，分别负责 API 端点开发和组件实现。Bob 已进入心流状态（Flow State），生产力稳定在 88%。
+- **会议进行中：** Frank Wu 正在主持 Sprint Review，虽然精力偏低（65%），但协作态度积极，会议结束后需要关注他的休息情况。
+- **运维警觉：** David Zhang 的 Alert 心情和 55 分心情评分值得关注——他在监控服务器健康，可能需要更多支持来缓解压力。
+- **质量保证：** Eve Liu 专注运行测试套件，生产力 90%，分析型心态有助于发现潜在问题。
 
-- **Carol Li** 表现最为出色，生产力高达 95%，精力 85%，心情处于创意状态。她正在设计新的仪表盘界面，成果令人期待。
-- **Grace Zhao** 同样表现亮眼，生产力 91%，精力 82%，好奇心驱动着她深入分析用户指标。
-- **Eve Liu** 专注于测试套件运行，生产力 90%，状态稳定。
-- **Bob Wang** 和 **Henry Xu** 都在编码状态，分别负责 API 端点和前端组件实现，进度正常。
-- **Frank Wu** 正在主持冲刺评审会议，虽然精力略低（65%），但作为 Tech Lead 仍在积极协作。
-- **David Zhang** 保持警觉状态监控服务器健康，心情分数偏低（55%），建议关注其工作压力。
-
-### 总体评估
-
-- 团队平均生产力 **89%**，平均精力 **76%**，平均心情 **68%**。
-- 当前无活跃新任务，全员处于自主工作状态，这是系统稳定的标志。
-- 自优化系统已完成 18 轮迭代，代码库稳定在 1002 行，知识库覆盖全部 8 名角色。
-- 周五下午团队状态稳健，适合进行版本发布和技术债清理。
-
-### 下周建议
-
-1. 关注 David Zhang 的情绪状态，适当减轻监控压力
-2. Frank Wu 会议结束后跟进冲刺评审结果
-3. 计划第 20 轮优化迭代，重点提升前端性能
+**总体评估：** 团队 8 人全部在线，平均精力 76%，平均心情 68。这是一个稳健的工作日下午状态。建议关注 David 的情绪恢复和 Frank 会议后的精力补充。
 
 ---
 
-*Virtual Office Simulator — Where AI Characters Come to Life* 🚀
+*Virtual Office v19 · 由 Alice Chen 自动维护 · 最后同步 2026-07-10 18:05 CST*
